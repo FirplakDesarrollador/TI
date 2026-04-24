@@ -9,8 +9,21 @@ import { SignaturePadComponent } from '@/components/SignaturePad'
 import { generateAssignmentPDF } from '@/lib/pdf-utils'
 import { SearchableSelect } from '@/components/SearchableSelect'
 import { StatusModal, ModalType } from '@/components/StatusModal'
+import { Suspense } from 'react'
 
-export default function AssignDevice() {
+export default function AssignDevicePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <Loader2 className="animate-spin text-[#254153]" size={40} />
+      </div>
+    }>
+      <AssignDevice />
+    </Suspense>
+  )
+}
+
+function AssignDevice() {
   const searchParams = useSearchParams()
   const initialDeviceId = searchParams.get('device_id')
   
@@ -312,6 +325,8 @@ export default function AssignDevice() {
                   <SearchableSelect
                     label="Persona"
                     required
+                    icon={<UserCheck size={16} />}
+                    className="w-full flex items-center justify-between rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                     placeholder="Seleccione una persona..."
                     options={employees.map(emp => ({
                       id: emp.id,
@@ -335,6 +350,8 @@ export default function AssignDevice() {
                     <SearchableSelect
                       label="Dispositivo"
                       required
+                      icon={<Package size={16} />}
+                      className="w-full flex items-center justify-between rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                       placeholder="Seleccione un dispositivo..."
                       options={devices.map(dev => ({
                         id: dev.id,

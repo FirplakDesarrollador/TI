@@ -17,7 +17,8 @@ import {
   X,
   CheckCircle2,
   AlertCircle,
-  History
+  History,
+  User
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { SearchableSelect } from '@/components/SearchableSelect'
@@ -463,6 +464,9 @@ export default function AssignmentsPage() {
 
               <SearchableSelect
                 label="Cambiar Colaborador"
+                icon={<User size={16} />}
+                className="w-full flex items-center justify-between rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                placeholder="Buscar colaborador..."
                 options={employees.map(emp => ({
                   id: emp.id,
                   label: emp.nombreCompleto,

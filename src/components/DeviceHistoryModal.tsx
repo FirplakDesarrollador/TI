@@ -74,8 +74,9 @@ export default function DeviceHistoryModal({
         .eq('device_id', deviceId)
 
       // 3. Combine
-      const combined = (historyData || []).map(entry => ({
+      const combined = (historyData || []).map((entry: any) => ({
         ...entry,
+        employee: Array.isArray(entry.employee) ? entry.employee[0] : entry.employee,
         pdf: pdfs?.find(p => p.historial_id === entry.id)
       }))
 
