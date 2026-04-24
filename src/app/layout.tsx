@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Infraestructura y Desarrollo",
-  description: "Portal de Infraestructura y Desarrollo",
+  title: "TI Infraestructura",
+  description: "Portal de TI Infraestructura y Desarrollo",
 };
 
 export default function RootLayout({
