@@ -9,7 +9,9 @@ import {
   UserCheck, 
   Table as TableIcon,
   LogOut,
-  Home
+  Home,
+  Menu,
+  X
 } from 'lucide-react'
 import { LogoFPK } from './LogoFPK'
 
@@ -19,6 +21,7 @@ import { createClient } from '@/lib/supabase'
 export function Sidebar() {
   const pathname = usePathname()
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
     async function getUser() {
@@ -78,7 +81,28 @@ export function Sidebar() {
   ] : []
 
   return (
-    <aside className="fixed inset-y-0 left-0 w-64 border-r border-[#749094]/10 bg-[#749094]/5 shadow-sm transition-all duration-300 overflow-y-auto">
+    <>
+      {/* Mobile Toggle Button */}
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-xl bg-[#254153] text-white shadow-lg transition-all active:scale-95 lg:hidden"
+        aria-label="Toggle Menu"
+      >
+        {isOpen ? <X size={20} /> : <Menu size={20} />}
+      </button>
+
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-[#254153]/20 backdrop-blur-sm transition-all animate-in fade-in duration-300 lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      <aside className={`
+        fixed inset-y-0 left-0 z-40 w-64 border-r border-[#749094]/10 bg-white lg:bg-[#749094]/5 shadow-xl lg:shadow-none transition-all duration-300 ease-in-out overflow-y-auto
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
       <div className="flex h-16 items-center border-b border-[#749094]/10 px-6">
         <LogoFPK size="sm" />
       </div>
@@ -88,6 +112,7 @@ export function Sidebar() {
           <Link
             key={item.href}
             href={item.href}
+            onClick={() => setIsOpen(false)}
             className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
               isActive(item.href)
                 ? 'bg-[#254153] text-white shadow-md'
@@ -109,6 +134,7 @@ export function Sidebar() {
           <Link
             key={item.href}
             href={item.href}
+            onClick={() => setIsOpen(false)}
             className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
               isActive(item.href)
                 ? 'bg-[#254153] text-white shadow-md'
@@ -133,5 +159,6 @@ export function Sidebar() {
         </form>
       </div>
     </aside>
+    </>
   )
 }
