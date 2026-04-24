@@ -1,0 +1,155 @@
+'use client'
+
+import Link from 'next/link'
+import { ArrowLeft, Save, PackagePlus, Loader2 } from 'lucide-react'
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
+
+export default function AddProduct() {
+  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    num_serial: '',
+    referencia: '',
+    nombre_dispositivo: '',
+    precio_producto: '',
+    detalle_producto: ''
+  })
+  
+  const router = useRouter()
+  const supabase = createClient()
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const { error } = await supabase
+        .from('ti_productos')
+        .insert([{
+          num_serial: formData.num_serial || null,
+          referencia: formData.referencia || null,
+          nombre_dispositivo: formData.nombre_dispositivo,
+          precio_producto: formData.precio_producto ? Number(formData.precio_producto) : null,
+          detalle_producto: formData.detalle_producto || null,
+          // We don't have a 'categoria' or 'cantidad' column in ti_productos based on our previous fetch
+        }])
+
+      if (error) throw error
+
+      router.push('/dashboard/inventory/list')
+      router.refresh()
+    } catch (error) {
+      console.error('Error saving product:', error)
+      alert('Error al guardar el producto. Por favor intenta de nuevo.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-8 font-sans text-slate-900">
+      <div className="mx-auto max-w-2xl">
+        <header className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/dashboard/inventory/list"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 transition-all hover:text-slate-800 hover:ring-slate-300"
+            >
+              <ArrowLeft size={20} />
+            </Link>
+            <h1 className="text-2xl font-bold text-slate-800">Ingresar Producto</h1>
+          </div>
+        </header>
+
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
+          <div className="border-b border-slate-100 bg-slate-50/50 p-6">
+            <div className="flex items-center gap-3 text-indigo-600">
+              <PackagePlus size={24} />
+              <span className="font-bold">Nuevo Producto</span>
+            </div>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="p-8 space-y-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Nombre del Dispositivo *</label>
+                <input 
+                  required
+                  name="nombre_dispositivo"
+                  value={formData.nombre_dispositivo}
+                  onChange={handleChange}
+                  type="text" 
+                  placeholder="Ej. Servidor Dell R740"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm transition-all focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Número de Serial</label>
+                <input 
+                  name="num_serial"
+                  value={formData.num_serial}
+                  onChange={handleChange}
+                  type="text" 
+                  placeholder="Ej. ABC123XYZ"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm transition-all focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Referencia</label>
+                <input 
+                  name="referencia"
+                  value={formData.referencia}
+                  onChange={handleChange}
+                  type="text" 
+                  placeholder="Ej. PowerEdge R740"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm transition-all focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Precio</label>
+                <input 
+                  name="precio_producto"
+                  value={formData.precio_producto}
+                  onChange={handleChange}
+                  type="number" 
+                  placeholder="0.00"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm transition-all focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Descripción / Detalles</label>
+              <textarea 
+                name="detalle_producto"
+                value={formData.detalle_producto}
+                onChange={handleChange}
+                rows={4}
+                placeholder="Detalles adicionales del producto..."
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm transition-all focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10"
+              ></textarea>
+            </div>
+
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition-all hover:bg-indigo-700 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                {loading ? 'Guardando...' : 'Guardar Producto'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
