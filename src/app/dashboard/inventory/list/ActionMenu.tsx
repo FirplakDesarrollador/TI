@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreHorizontal, X, Save, Loader2, UserCheck, History, Wrench, CheckCircle2 } from 'lucide-react'
+import { MoreHorizontal, X, Save, Loader2, UserCheck, History, Wrench, CheckCircle2, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
@@ -15,6 +15,8 @@ export default function ActionMenu({ device }: { device: any }) {
   const [isMarkingRepaired, setIsMarkingRepaired] = useState(false)
   const [showRepairConfirm, setShowRepairConfirm] = useState(false)
   const [showReturnConfirm, setShowReturnConfirm] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [formData, setFormData] = useState({
     num_serial: device.num_serial || '',
     referencia: device.referencia || '',
@@ -85,6 +87,41 @@ export default function ActionMenu({ device }: { device: any }) {
     }
   }
 
+  const handleDelete = async () => {
+    setIsDeleting(true)
+    try {
+      // 1. Eliminar de ti_asignaciones_pdf (relacionado por device_id)
+      const { error: pdfError } = await supabase
+        .from('ti_asignaciones_pdf')
+        .delete()
+        .eq('device_id', device.id)
+      if (pdfError) throw pdfError
+
+      // 2. Eliminar de ti_historial_stock (relacionado por producto_id)
+      const { error: historyError } = await supabase
+        .from('ti_historial_stock')
+        .delete()
+        .eq('producto_id', device.id)
+      if (historyError) throw historyError
+
+      // 3. Finalmente eliminar el producto
+      const { error } = await supabase
+        .from('ti_productos')
+        .delete()
+        .eq('id', device.id)
+
+      if (error) throw error
+      
+      setShowDeleteConfirm(false)
+      router.refresh()
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      alert('No se pudo eliminar el producto por completo. Verifique si tiene dependencias adicionales.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -115,50 +152,57 @@ export default function ActionMenu({ device }: { device: any }) {
 
   return (
     <>
-      <div className="flex items-center justify-end gap-3">
+      <div className="flex items-center justify-end gap-1.5">
         {device.latest_estado === 'reparacion' ? (
           <button 
             onClick={() => setShowReturnConfirm(true)}
             disabled={isMarkingRepaired}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-600 bg-emerald-50 transition-all hover:bg-emerald-100"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-emerald-600 bg-emerald-50 transition-all hover:bg-emerald-100"
             title="Marcar como Reparado"
           >
-            {isMarkingRepaired ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+            {isMarkingRepaired ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
           </button>
         ) : (
           <button 
             onClick={() => setShowRepairConfirm(true)}
             disabled={isRepairing || device.latest_estado === 'reparacion'}
-            className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all ${
+            className={`flex h-7 w-7 items-center justify-center rounded-lg transition-all ${
               device.latest_estado === 'reparacion' 
                 ? 'text-rose-400 bg-rose-50 cursor-not-allowed opacity-50' 
                 : 'text-[#749094] hover:bg-rose-50 hover:text-rose-600'
             }`}
             title="Mandar a Reparación"
           >
-            {isRepairing ? <Loader2 size={18} className="animate-spin" /> : <Wrench size={18} />}
+            {isRepairing ? <Loader2 size={16} className="animate-spin" /> : <Wrench size={16} />}
           </button>
         )}
         <button 
           onClick={() => setIsHistoryOpen(true)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#749094] transition-all hover:bg-[#749094]/10 hover:text-[#254153]"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-[#749094] transition-all hover:bg-[#749094]/10 hover:text-[#254153]"
           title="Ver historial de asignaciones"
         >
-          <History size={18} />
+          <History size={16} />
         </button>
         <Link 
           href={`/dashboard/inventory/assign?device_id=${device.id}`}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#749094] transition-all hover:bg-[#749094]/10 hover:text-[#254153]"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-[#749094] transition-all hover:bg-[#749094]/10 hover:text-[#254153]"
           title="Generar Acta de Asignación"
         >
-          <UserCheck size={18} />
+          <UserCheck size={16} />
         </Link>
         <button 
           onClick={() => setIsOpen(true)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#749094] transition-all hover:bg-[#749094]/10 hover:text-[#254153]"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-[#749094] transition-all hover:bg-[#749094]/10 hover:text-[#254153]"
           title="Editar producto"
         >
-          <MoreHorizontal size={18} />
+          <MoreHorizontal size={16} />
+        </button>
+        <button 
+          onClick={() => setShowDeleteConfirm(true)}
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-rose-300 transition-all hover:bg-rose-50 hover:text-rose-600"
+          title="Eliminar producto"
+        >
+          <Trash2 size={16} />
         </button>
       </div>
 
@@ -197,6 +241,44 @@ export default function ActionMenu({ device }: { device: any }) {
                  <button
                     onClick={() => setShowRepairConfirm(false)}
                     disabled={isRepairing}
+                    className="w-full rounded-2xl bg-slate-50 py-3 text-sm font-bold text-[#749094] transition-all hover:bg-slate-100 active:scale-95 disabled:opacity-50"
+                 >
+                    Cancelar
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* Custom Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+           <div 
+            className="absolute inset-0 bg-[#254153]/40 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => !isDeleting && setShowDeleteConfirm(false)}
+           />
+           <div className="relative w-full max-w-sm overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+              <div className="mb-6 flex justify-center">
+                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+                    <Trash2 size={32} />
+                 </div>
+              </div>
+              <h3 className="mb-2 text-center text-lg font-black text-[#254153]">Eliminar Producto</h3>
+              <p className="mb-8 text-center text-sm text-[#749094] leading-relaxed">
+                ¿Estás completamente seguro de eliminar el producto <span className="font-bold text-[#254153]">"{device.num_serial || device.nombre_dispositivo}"</span>?<br/>
+                <span className="text-xs text-rose-500 font-bold uppercase tracking-tighter mt-2 block">Esta acción no se puede deshacer.</span>
+              </p>
+              <div className="flex flex-col gap-3">
+                 <button
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-rose-600 py-3 text-sm font-bold text-white transition-all hover:bg-rose-700 active:scale-95 disabled:opacity-50"
+                 >
+                    {isDeleting ? <Loader2 size={18} className="animate-spin" /> : 'Sí, Eliminar Permanentemente'}
+                 </button>
+                 <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={isDeleting}
                     className="w-full rounded-2xl bg-slate-50 py-3 text-sm font-bold text-[#749094] transition-all hover:bg-slate-100 active:scale-95 disabled:opacity-50"
                  >
                     Cancelar
