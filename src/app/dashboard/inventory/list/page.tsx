@@ -136,7 +136,7 @@ export default async function InventoryList({
                       ]} 
                     />
                   </th>
-                  <th className="px-6 py-4">
+                    <th className="px-6 py-4">
                     <ColumnFilter 
                       title="Estado" 
                       paramKey="status" 
@@ -144,6 +144,7 @@ export default async function InventoryList({
                         { label: 'Todos', value: '' },
                         { label: 'Asignados', value: 'asignado' },
                         { label: 'Disponibles', value: 'disponible' },
+                        { label: 'En Reparación', value: 'reparacion' },
                         { label: 'Sin Registro', value: 'Sin Registro' }
                       ]} 
                     />
@@ -170,10 +171,11 @@ export default async function InventoryList({
                     <td className="px-6 py-4">
                       <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${
                         device.latest_estado === 'asignado' ? 'bg-amber-50 text-amber-600' :
+                        device.latest_estado === 'reparacion' ? 'bg-rose-50 text-rose-600' :
                         device.latest_estado === 'Sin Registro' ? 'bg-[#749094]/10 text-[#749094]' :
                         'bg-emerald-50 text-emerald-600'
                       }`}>
-                        {device.latest_estado}
+                        {device.latest_estado === 'reparacion' ? 'En Reparación' : device.latest_estado}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-[#749094]/80 max-w-xs truncate">{device.detalle_producto || 'Sin detalle'}</td>

@@ -18,18 +18,27 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
+import { createClient as createExternalClient } from '@supabase/supabase-js'
 import { SearchableSelect } from '@/components/SearchableSelect'
+
+// External database for Cost Centers and Accounts (Visitantes y Proveedores)
+const otherSupabase = createExternalClient(
+  'https://zohdtksgxhbheaftgmsi.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvaGR0a3NneGhiaGVhZnRnbXNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjI5NjExNTEsImV4cCI6MjAzODUzNzE1MX0.Euu6FTh11mbh4lUmhKFMTFYZ9hWgZ-RzECcUYKGRYQE'
+)
 
 export default function RequestDevicePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [success, setSuccess] = useState(false)
+  const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   
   // Data for dropdowns
   const [devices, setDevices] = useState<string[]>([])
-  const [jefes, setJefes] = useState<string[]>([])
+  const [jefes, setJefes] = useState<{name: string, email: string}[]>([])
+  const [costCenters, setCostCenters] = useState<{id: string, label: string}[]>([])
+  const [accounts, setAccounts] = useState<{id: string, label: string}[]>([])
   const [user, setUser] = useState<any>(null)
 
   // Form state
@@ -40,6 +49,7 @@ export default function RequestDevicePage() {
     centro_costos: '',
     cuenta_contable: '',
     jefe_aprobador: '',
+    email_jefe: '',
     comentario: ''
   })
 
@@ -48,29 +58,63 @@ export default function RequestDevicePage() {
       setLoading(true)
       const supabase = createClient()
 
-      // Get current user
-      const { data: { user: authUser } } = await supabase.auth.getUser()
-      setUser(authUser)
+      try {
+        // Get current user
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+        setUser(authUser)
 
-      // Fetch categories
-      const { data: categoryData } = await supabase
-        .from('ti_categorias_productos')
-        .select('categoria')
-        .order('categoria')
-      
-      const uniqueCategories = Array.from(new Set((categoryData || []).map(c => c.categoria.trim())))
-      const filteredCategories = uniqueCategories.filter(c => c.toLowerCase() !== 'otro')
-      setDevices([...filteredCategories, 'Otro'])
+        // Fetch categories
+        const { data: categoryData } = await supabase
+          .from('ti_categorias_productos')
+          .select('categoria')
+          .order('categoria')
+        
+        const uniqueCategories = Array.from(new Set((categoryData || []).map(c => c.categoria.trim())))
+        const filteredCategories = uniqueCategories.filter(c => c.toLowerCase() !== 'otro')
+        setDevices([...filteredCategories, 'Otro'])
 
-      // Fetch jefes
-      const { data: jefesData } = await supabase
-        .from('view_jefes')
-        .select('jefe')
-        .order('jefe')
-      
-      setJefes((jefesData || []).map(j => j.jefe))
-      
-      setLoading(false)
+        // Fetch jefes with email mapping
+        const { data: jefesData } = await supabase
+          .from('view_jefes_con_correo')
+          .select('jefe_nombre, jefe_correo')
+          .order('jefe_nombre')
+        
+        setJefes((jefesData || []).map(j => ({
+          name: j.jefe_nombre,
+          email: j.jefe_correo || ''
+        })))
+
+        // Fetch cost centers from external database
+        const { data: ccData } = await otherSupabase
+          .from('Centro_costos')
+          .select('codigo, "Título"')
+          .order('codigo')
+        
+        if (ccData) {
+          setCostCenters(ccData.map(cc => ({
+            id: cc.codigo,
+            label: `${cc.codigo} - ${cc.Título || ''}`
+          })))
+        }
+
+        // Fetch accounts from external database
+        const { data: accountsData } = await otherSupabase
+          .from('cuentas')
+          .select('"Título"')
+          .order('Título')
+        
+        if (accountsData) {
+          setAccounts(accountsData.map(acc => ({
+            id: acc.Título,
+            label: acc.Título
+          })))
+        }
+
+      } catch (err) {
+        console.error('Error fetching data:', err)
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchData()
@@ -86,28 +130,37 @@ export default function RequestDevicePage() {
     try {
       const supabase = createClient()
       
-      const { error: insertError } = await supabase
+      const { data, error: insertError } = await supabase
         .from('ti_solicitudes_dispositivos')
         .insert([{
           user_id: user.id,
           email_solicitante: user.email,
+          nombre_solicitante: user.user_metadata?.full_name || user.email,
           dispositivo: formData.dispositivo === 'Otro' ? formData.otro_dispositivo : formData.dispositivo,
           cantidad: formData.cantidad,
           centro_costos: formData.centro_costos,
           cuenta_contable: formData.cuenta_contable,
           jefe_aprobador: formData.jefe_aprobador,
+          email_jefe: formData.email_jefe,
           comentario: formData.comentario,
           estado: 'Pendiente'
         }])
+        .select('ticket_number')
+        .single()
 
       if (insertError) throw insertError
 
-      setSuccess(true)
-      setTimeout(() => {
-        router.push('/')
-      }, 3000)
+      setSuccess(data?.ticket_number || 'REGISTRADA')
     } catch (err: any) {
       console.error('Error submitting request:', err)
+      if (err.details || err.hint || err.code) {
+        console.error('Detailed error:', {
+          message: err.message,
+          details: err.details,
+          hint: err.hint,
+          code: err.code
+        })
+      }
       setError(err.message || 'Error al enviar la solicitud. Por favor intenta de nuevo.')
     } finally {
       setSubmitting(false)
@@ -127,21 +180,30 @@ export default function RequestDevicePage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white p-4">
-        <div className="max-w-md w-full text-center space-y-6 animate-in zoom-in duration-500">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-            <CheckCircle2 size={48} />
+      <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] p-4">
+        <div className="max-w-md w-full text-center space-y-8 animate-in zoom-in duration-500">
+          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 shadow-xl shadow-emerald-200/50">
+            <CheckCircle2 size={56} />
           </div>
-          <div className="space-y-2">
-            <h2 className="text-3xl font-black text-[#254153]">¡Solicitud Enviada!</h2>
-            <p className="text-[#749094]">
-              Tu solicitud ha sido registrada correctamente. Redirigiéndote al menú principal...
+          <div className="space-y-4">
+            <h2 className="text-4xl font-black text-[#254153]">¡Solicitud Enviada!</h2>
+            <p className="text-[#749094] text-lg font-medium">
+              Tu requerimiento ha sido registrado con el ID:
+            </p>
+            <div className="bg-[#254153] text-white py-4 px-8 rounded-3xl text-3xl font-black tracking-widest shadow-2xl shadow-[#254153]/30 inline-block mx-auto">
+              {success}
+            </div>
+            <p className="text-[#749094] pt-4">
+              Guarda este número para realizar el seguimiento de tu equipo.
             </p>
           </div>
-          <div className="pt-4">
-            <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-500 transition-all duration-[3000ms] w-full" style={{ transitionTimingFunction: 'linear' }} />
-            </div>
+          <div className="pt-8">
+            <button
+              onClick={() => router.push('/')}
+              className="px-8 py-4 rounded-2xl bg-white border border-[#254153]/10 text-[#254153] font-bold transition-all hover:bg-[#254153]/5 active:scale-95 shadow-sm"
+            >
+              Volver al inicio
+            </button>
           </div>
         </div>
       </div>
@@ -161,6 +223,28 @@ export default function RequestDevicePage() {
           </Link>
           <h2 className="text-xl font-bold text-[#254153]">Solicitar Dispositivo</h2>
         </div>
+
+        <button
+          onClick={() => {
+            const publicUrl = `${window.location.origin}/public/inventory/request`
+            navigator.clipboard.writeText(publicUrl)
+            const btn = document.getElementById('copy-link-btn')
+            if (btn) {
+              const originalContent = btn.innerHTML
+              btn.innerHTML = '<span class="flex items-center gap-2 text-emerald-600"><CheckCircle2 size={18} /> ¡Copiado!</span>'
+              btn.classList.add('bg-emerald-50', 'border-emerald-200')
+              setTimeout(() => {
+                btn.innerHTML = originalContent
+                btn.classList.remove('bg-emerald-50', 'border-emerald-200')
+              }, 2000)
+            }
+          }}
+          id="copy-link-btn"
+          className="flex items-center gap-2 rounded-xl border border-[#254153]/10 bg-[#254153]/5 px-4 py-2 text-xs font-bold text-[#254153] transition-all hover:bg-[#254153]/10 active:scale-95"
+        >
+          <PlusCircle size={16} />
+          Copiar Link Público
+        </button>
       </header>
 
       <main className="mx-auto max-w-2xl px-8 py-12">
@@ -265,40 +349,30 @@ export default function RequestDevicePage() {
                   className="w-full rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                   placeholder="Ej: 1"
                 />
-              </div>
-
-              {/* Centro de Costos */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-bold text-[#254153]">
-                  <Building2 size={16} className="text-[#749094]" />
-                  Centro de Costos <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.centro_costos}
-                  onChange={(e) => setFormData({ ...formData, centro_costos: e.target.value })}
-                  className="w-full rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
-                  placeholder="Escribe el centro de costos..."
-                />
-              </div>
+                    {/* Centro de Costos */}
+              <SearchableSelect
+                label="Centro de Costos"
+                icon={<Building2 size={16} />}
+                placeholder="Busca el centro..."
+                required
+                className="w-full flex items-center justify-between rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                options={costCenters}
+                value={formData.centro_costos}
+                onChange={(val) => setFormData({ ...formData, centro_costos: val.toString() })}
+              />
 
               {/* Cuenta Contable */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-bold text-[#254153]">
-                  <Hash size={16} className="text-[#749094]" />
-                  Cuenta Contable <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.cuenta_contable}
-                  onChange={(e) => setFormData({ ...formData, cuenta_contable: e.target.value })}
-                  className="w-full rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
-                  placeholder="Escribe la cuenta contable..."
-                />
-                <p className="text-[10px] text-[#749094] italic mt-1">* Estos campos estarán disponibles próximamente como listas desplegables.</p>
-              </div>
+              <SearchableSelect
+                label="Cuenta Contable"
+                icon={<Hash size={16} />}
+                placeholder="Busca la cuenta..."
+                required
+                className="w-full flex items-center justify-between rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                options={accounts}
+                value={formData.cuenta_contable}
+                onChange={(val) => setFormData({ ...formData, cuenta_contable: val.toString() })}
+              />
+           </div>
 
               {/* Jefe Aprobador */}
               <SearchableSelect
@@ -308,11 +382,18 @@ export default function RequestDevicePage() {
                 required
                 className="w-full flex items-center justify-between rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                 options={jefes.map(jefe => ({
-                  id: jefe,
-                  label: jefe
+                  id: jefe.name,
+                  label: jefe.email ? `${jefe.name} (${jefe.email})` : jefe.name
                 }))}
                 value={formData.jefe_aprobador}
-                onChange={(val) => setFormData({ ...formData, jefe_aprobador: val.toString() })}
+                onChange={(val) => {
+                  const selected = jefes.find(j => j.name === val)
+                  setFormData({ 
+                    ...formData, 
+                    jefe_aprobador: val.toString(),
+                    email_jefe: selected?.email || ''
+                  })
+                }}
               />
 
               {/* Comentario */}

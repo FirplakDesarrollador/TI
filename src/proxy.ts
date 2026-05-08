@@ -59,9 +59,11 @@ export async function proxy(request: NextRequest) {
     const isAuthorizedMockUser = mockUserId === 'a11458f3-e3c2-4877-8203-49ff9f928285'
 
     // If user is not logged in and not on login or auth callback page, redirect to login
+    // ALLOW public routes without authentication
     if (!user && !isAuthorizedMockUser &&
         !request.nextUrl.pathname.startsWith('/login') && 
-        !request.nextUrl.pathname.startsWith('/auth')
+        !request.nextUrl.pathname.startsWith('/auth') &&
+        !request.nextUrl.pathname.startsWith('/public')
     ) {
         return NextResponse.redirect(new URL('/login', request.url))
     }
