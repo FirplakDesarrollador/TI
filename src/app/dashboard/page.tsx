@@ -16,291 +16,432 @@ import {
   Loader2,
   Table as TableIcon,
   Search,
+  Monitor,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  TrendingUp,
+  AlertTriangle,
+  ArrowUpRight
 } from "lucide-react";
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  PieChart, 
+  Pie, 
+  Cell,
+  AreaChart,
+  Area
+} from 'recharts';
 import { LogoFPK } from "@/components/LogoFPK";
 import { createClient } from "@/lib/supabase";
 
+const COLORS = ['#254153', '#749094', '#94A3B8', '#CBD5E1', '#E2E8F0'];
+
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<any[]>([]);
+  const [inventoryStats, setInventoryStats] = useState<any[]>([]);
+  const [requestStats, setRequestStats] = useState<any>({ total: 0, pendiente: 0, aprobado: 0, rechazado: 0 });
+  const [assignmentStats, setAssignmentStats] = useState<any[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]);
   const [filterText, setFilterText] = useState("");
 
+  const supabase = createClient();
+
   useEffect(() => {
-    async function fetchStats() {
-      const supabase = createClient();
+    async function fetchAllData() {
+      setLoading(true);
+      try {
+        // 1. Fetch Inventory Stats
+        const { data: devices } = await supabase.from("ti_productos")
+          .select(`
+            nombre_dispositivo,
+            ti_historial_stock (
+              estado,
+              created_at
+            )
+          `);
 
-      const { data: devices, error } = await supabase.from("ti_productos")
-        .select(`
-          nombre_dispositivo,
-          ti_historial_stock (
-            estado,
-            created_at
-          )
-        `);
+        // 2. Fetch Request Stats
+        const { data: requests } = await supabase.from("ti_solicitudes_dispositivos").select("estado");
+        
+        // 3. Fetch Assignment Stats (last 6 months)
+        const { data: assignments } = await supabase.from("ti_asignaciones").select("created_at");
 
-      if (error) {
-        console.error("Error fetching stats:", error);
-        setLoading(false);
-        return;
-      }
+        // Process Inventory
+        const aggregation: Record<string, Record<string, number>> = {};
+        const allStatuses = new Set<string>();
+        const statusGlobal: Record<string, number> = {};
 
-      // Process data to get latest status for each device
-      const processedDevices = (devices || []).map((d) => {
-        const latestHistory = (d.ti_historial_stock as any[])?.sort(
-          (a: any, b: any) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-        )[0];
-        return {
-          dispositivo: d.nombre_dispositivo || "Desconocido",
-          estado: latestHistory?.estado || "Sin Registro",
-        };
-      });
+        (devices || []).forEach((d) => {
+          const latestHistory = (d.ti_historial_stock as any[])?.sort(
+            (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+          )[0];
+          const estado = latestHistory?.estado || "Sin Registro";
+          const nombre = d.nombre_dispositivo || "Desconocido";
 
-      // Aggregate counts
-      const aggregation: Record<string, Record<string, number>> = {};
-      const allStatuses = new Set<string>();
+          if (!aggregation[nombre]) aggregation[nombre] = {};
+          aggregation[nombre][estado] = (aggregation[nombre][estado] || 0) + 1;
+          statusGlobal[estado] = (statusGlobal[estado] || 0) + 1;
+          allStatuses.add(estado);
+        });
 
-      processedDevices.forEach((d) => {
-        if (!aggregation[d.dispositivo]) {
-          aggregation[d.dispositivo] = {};
-        }
-        aggregation[d.dispositivo][d.estado] =
-          (aggregation[d.dispositivo][d.estado] || 0) + 1;
-        allStatuses.add(d.estado);
-      });
-
-      const finalStats = Object.keys(aggregation)
-        .map((device) => ({
+        setInventoryStats(Object.keys(aggregation).map(device => ({
           device,
           counts: aggregation[device],
           total: Object.values(aggregation[device]).reduce((a, b) => a + b, 0),
-        }))
-        .sort((a, b) => b.total - a.total);
+        })).sort((a, b) => b.total - a.total));
+        
+        setStatuses(Array.from(allStatuses).sort());
 
-      setStats(finalStats);
-      setStatuses(Array.from(allStatuses).sort());
-      setLoading(false);
+        // Process Requests
+        const reqSummary = { total: requests?.length || 0, pendiente: 0, aprobado: 0, rechazado: 0 };
+        requests?.forEach(r => {
+          const s = r.estado?.toLowerCase();
+          if (s === 'pendiente') reqSummary.pendiente++;
+          else if (s === 'aprobado') reqSummary.aprobado++;
+          else if (s === 'rechazado') reqSummary.rechazado++;
+        });
+        setRequestStats(reqSummary);
+
+        // Process Assignments for Chart
+        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const currentMonth = new Date().getMonth();
+        const chartData = Array.from({ length: 6 }).map((_, i) => {
+          const monthIdx = (currentMonth - (5 - i) + 12) % 12;
+          return { name: months[monthIdx], value: 0 };
+        });
+
+        assignments?.forEach(a => {
+          const date = new Date(a.created_at);
+          const monthLabel = months[date.getMonth()];
+          const dataPoint = chartData.find(d => d.name === monthLabel);
+          if (dataPoint) dataPoint.value++;
+        });
+        setAssignmentStats(chartData);
+
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    fetchStats();
+    fetchAllData();
   }, []);
 
   const filteredStats = useMemo(() => {
-    return stats.filter((row) =>
+    return inventoryStats.filter((row) =>
       row.device.toLowerCase().includes(filterText.toLowerCase()),
     );
-  }, [stats, filterText]);
+  }, [inventoryStats, filterText]);
 
-  const statusTotals = useMemo(() => {
-    const totals: Record<string, number> = {};
-    statuses.forEach((status) => {
-      totals[status] = stats.reduce(
-        (acc, row) => acc + (row.counts[status] || 0),
-        0,
-      );
+  const pieData = useMemo(() => {
+    const data: Record<string, number> = {};
+    inventoryStats.forEach(row => {
+      Object.entries(row.counts).forEach(([status, count]) => {
+        data[status] = (data[status] || 0) + (count as number);
+      });
     });
-    return totals;
-  }, [stats, statuses]);
+    return Object.entries(data).map(([name, value]) => ({ name, value }));
+  }, [inventoryStats]);
 
-  const maxStatusCount = useMemo(() => {
-    return Math.max(...Object.values(statusTotals), 1);
-  }, [statusTotals]);
+  const requestChartData = useMemo(() => [
+    { name: 'Pendientes', value: requestStats.pendiente, fill: '#f59e0b' },
+    { name: 'Aprobados', value: requestStats.aprobado, fill: '#10b981' },
+    { name: 'Rechazados', value: requestStats.rechazado, fill: '#f43f5e' },
+  ], [requestStats]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative flex items-center justify-center">
+             <div className="absolute h-24 w-24 rounded-full border-4 border-[#254153]/10 border-t-[#254153] animate-spin" />
+             <TrendingUp className="h-8 w-8 text-[#254153] animate-pulse" />
+          </div>
+          <p className="text-sm font-black text-[#254153] uppercase tracking-[0.2em] animate-pulse mt-4">Analizando Datos BI...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white min-h-screen">
-      <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-[#749094]/10 bg-white/80 px-8 backdrop-blur-md">
-        <h2 className="text-xl font-bold text-[#254153]">Panel de Control</h2>
-        <div className="flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#749094]/10 ring-4 ring-[#749094]/5">
-            <User size={20} className="text-[#254153]" />
+    <div className="min-h-screen bg-[#F8FAFC]">
+      {/* Header BI Style */}
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 px-8 py-4 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[90rem] items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#254153] to-[#1a2e3b] text-white shadow-lg shadow-[#254153]/20">
+              <TrendingUp size={24} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-[#254153] tracking-tighter uppercase">BI Analytics</h1>
+              <p className="text-[10px] font-bold text-[#749094] uppercase tracking-widest">Resumen Ejecutivo de Gestión TI</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+             <div className="hidden sm:flex flex-col items-end mr-4">
+                <span className="text-xs font-black text-[#254153]">Panel Principal</span>
+                <span className="text-[10px] text-[#749094] flex items-center gap-1">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> En vivo
+                </span>
+             </div>
           </div>
         </div>
       </header>
 
-      <div className="p-8">
-        {loading ? (
-          <div className="flex h-64 items-center justify-center">
-            <Loader2 className="animate-spin text-[#254153]" size={32} />
-          </div>
-        ) : (
-          <>
-            {/* Summary Chart Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-              <div className="lg:col-span-2 rounded-3xl border border-[#749094]/10 bg-white p-8 shadow-sm">
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-lg font-bold text-[#254153]">
-                    Distribución por Estado
-                  </h3>
-                  <div className="text-xs font-semibold text-[#749094] uppercase tracking-wider">
-                    Total: {stats.reduce((acc, row) => acc + row.total, 0)}{" "}
-                    Equipos
-                  </div>
-                </div>
-                <div className="space-y-6">
-                  {statuses.map((status) => (
-                    <div key={status} className="space-y-2">
-                      <div className="flex justify-between text-sm font-bold">
-                        <span className="text-[#254153]">{status}</span>
-                        <span className="text-[#749094]">
-                          {statusTotals[status]}
-                        </span>
-                      </div>
-                      <div className="h-3 w-full rounded-full bg-[#749094]/5 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-[#254153] transition-all duration-1000"
-                          style={{
-                            width: `${(statusTotals[status] / maxStatusCount) * 100}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+      <main className="mx-auto max-w-[90rem] p-8 space-y-8">
+        
+        {/* KPI Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <KPICard 
+            title="Inventario Activo" 
+            value={inventoryStats.reduce((a, b) => a + b.total, 0)} 
+            icon={<Package size={24} />} 
+            trend="Total Registrado" 
+            color="indigo"
+          />
+          <KPICard 
+            title="Solicitudes Pendientes" 
+            value={requestStats.pendiente} 
+            icon={<Clock size={24} />} 
+            trend="Requiere Aprobación" 
+            color="amber"
+          />
+          <KPICard 
+            title="Entregas Exitosas" 
+            value={requestStats.aprobado} 
+            icon={<CheckCircle2 size={24} />} 
+            trend="Histórico Aprobado" 
+            color="emerald"
+          />
+          <KPICard 
+            title="Equipos Críticos" 
+            value={inventoryStats.reduce((acc, row) => acc + (row.counts['reparacion'] || 0), 0)} 
+            icon={<AlertTriangle size={24} />} 
+            trend="En Reparación" 
+            color="rose"
+          />
+        </div>
 
-              <div className="rounded-3xl border border-[#749094]/10 bg-[#254153] p-8 text-white shadow-xl shadow-[#254153]/20 flex flex-col justify-center overflow-hidden relative">
-                <div className="absolute -right-8 -bottom-8 opacity-10">
-                  <TableIcon size={160} />
-                </div>
-                <p className="text-white/60 text-sm font-semibold uppercase tracking-widest mb-2">
-                  Estado Crítico
-                </p>
-                <h4 className="text-5xl font-black mb-4">
-                  {statusTotals["mantenimiento"] || 0}
-                </h4>
-                <p className="text-white/80 text-sm leading-relaxed">
-                  Equipos actualmente registrados bajo estado de mantenimiento o
-                  revisión técnica.
-                </p>
-                <div className="mt-8">
-                  <Link
-                    href="/dashboard/inventory/list"
-                    className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-bold hover:bg-white/20 transition-colors"
-                  >
-                    Ver Inventario <ChevronRight size={16} />
-                  </Link>
-                </div>
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Main Trend Chart */}
+          <div className="lg:col-span-8 rounded-[2.5rem] bg-white p-8 border border-slate-200 shadow-xl shadow-slate-200/20">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-lg font-black text-[#254153] uppercase tracking-tight">Tendencia de Entregas</h3>
+                <p className="text-xs text-[#749094] font-medium">Volumen de actas generadas (Últimos 6 meses)</p>
+              </div>
+            </div>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={assignmentStats}>
+                  <defs>
+                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#254153" stopOpacity={0.15}/>
+                      <stop offset="95%" stopColor="#254153" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f8fafc" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 600}} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 600}} dx={-10} />
+                  <Tooltip 
+                    cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                    contentStyle={{borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px 16px'}}
+                    itemStyle={{fontWeight: '900', color: '#254153'}}
+                    labelStyle={{color: '#749094', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px'}}
+                  />
+                  <Area type="monotone" dataKey="value" stroke="#254153" strokeWidth={4} fillOpacity={1} fill="url(#colorValue)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Secondary Charts Column */}
+          <div className="lg:col-span-4 grid grid-rows-2 gap-8">
+            {/* Distribution Pie Chart */}
+            <div className="rounded-[2.5rem] bg-white p-8 border border-slate-200 shadow-xl shadow-slate-200/20 flex flex-col relative overflow-hidden">
+              <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-indigo-50/50 blur-2xl" />
+              <div className="mb-4 relative z-10">
+                <h3 className="text-lg font-black text-[#254153] uppercase tracking-tight">Estado del Stock</h3>
+              </div>
+              <div className="flex-1 flex items-center justify-center relative z-10">
+                 <div className="h-[140px] w-full relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={70}
+                          paddingAngle={6}
+                          dataKey="value"
+                          stroke="none"
+                        >
+                          {pieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
+                          itemStyle={{fontWeight: 'bold', color: '#254153'}}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                       <span className="text-2xl font-black text-[#254153]">{inventoryStats.reduce((a, b) => a + b.total, 0)}</span>
+                    </div>
+                 </div>
               </div>
             </div>
 
-            {/* Indicators Table Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-[#254153] rounded-lg text-white">
-                    <TableIcon size={20} />
-                  </div>
-                  <h3 className="text-lg font-bold text-[#254153]">
-                    Indicadores de Equipos
-                  </h3>
-                </div>
-                <p className="text-sm text-[#749094]">
-                  Resumen detallado de inventario por tipo de dispositivo y
-                  estado actual.
-                </p>
+            {/* Requests Status Bar Chart */}
+            <div className="rounded-[2.5rem] bg-white p-8 border border-slate-200 shadow-xl shadow-slate-200/20 flex flex-col relative overflow-hidden">
+              <div className="absolute -left-10 -bottom-10 h-32 w-32 rounded-full bg-emerald-50/50 blur-2xl" />
+              <div className="mb-4 relative z-10">
+                <h3 className="text-lg font-black text-[#254153] uppercase tracking-tight">Solicitudes</h3>
               </div>
+              <div className="flex-1 flex items-end relative z-10 pb-4">
+                 <div className="h-[120px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={requestChartData} margin={{top: 10, right: 0, left: -20, bottom: 0}}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f8fafc" />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 'bold'}} dy={5}/>
+                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} />
+                        <Tooltip 
+                          cursor={{fill: '#f1f5f9', radius: 8}}
+                          contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
+                        />
+                        <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                          {requestChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-              <div className="relative w-full max-sm:max-w-none max-w-sm">
-                <Search
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#749094]"
-                  size={18}
-                />
-                <input
-                  type="text"
+        {/* Detailed Table Section */}
+        <div className="rounded-[2.5rem] bg-white border border-slate-200 shadow-2xl shadow-[#254153]/5 overflow-hidden">
+          <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-white to-slate-50/50">
+             <div>
+                <h3 className="text-xl font-black text-[#254153] uppercase tracking-tight">Desglose Técnico de Inventario</h3>
+                <p className="text-xs text-[#749094] font-medium mt-1">Análisis detallado por categoría de dispositivo</p>
+             </div>
+             <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94a3b8]" size={18} />
+                <input 
+                  type="text" 
                   value={filterText}
                   onChange={(e) => setFilterText(e.target.value)}
-                  placeholder="Filtrar por dispositivo..."
-                  className="w-full rounded-2xl border border-[#749094]/20 bg-white py-3 pl-12 pr-4 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5 placeholder:text-[#749094]/50"
+                  placeholder="Buscar equipo específico..."
+                  className="pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-semibold focus:outline-none focus:border-[#254153]/30 focus:ring-4 focus:ring-[#254153]/5 transition-all w-full md:w-80 shadow-sm"
                 />
-              </div>
-            </div>
-
-            <div className="overflow-hidden rounded-3xl border border-[#749094]/10 bg-white shadow-xl shadow-[#749094]/5">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-[#749094]/10 bg-[#749094]/5 text-xs font-bold uppercase tracking-wider text-[#749094]">
-                      <th className="px-6 py-4">Dispositivo</th>
-                      {statuses.map((status) => (
-                        <th key={status} className="px-6 py-4 text-center">
-                          {status}
-                        </th>
-                      ))}
-                      <th className="px-6 py-4 text-right bg-[#254153]/5 text-[#254153]">
-                        Total
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#749094]/10 text-sm">
-                    {filteredStats.map((row) => (
-                      <tr
-                        key={row.device}
-                        className="transition-colors hover:bg-[#749094]/5"
-                      >
-                        <td className="px-6 py-4 font-bold text-[#254153]">
-                          {row.device}
+             </div>
+          </div>
+          <div className="overflow-x-auto">
+             <table className="w-full text-left border-collapse">
+                <thead>
+                   <tr className="bg-slate-50/80 text-[10px] font-black uppercase tracking-widest text-[#749094]">
+                      <th className="px-8 py-5 border-b border-slate-200">Dispositivo</th>
+                      {statuses.map(s => <th key={s} className="px-8 py-5 text-center border-b border-slate-200">{s}</th>)}
+                      <th className="px-8 py-5 text-right bg-[#254153]/5 text-[#254153] border-b border-slate-200">TOTAL</th>
+                   </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                   {filteredStats.map(row => (
+                     <tr key={row.device} className="hover:bg-slate-50/80 transition-colors group">
+                        <td className="px-8 py-5">
+                           <div className="flex items-center gap-4">
+                              <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-[#254153] group-hover:scale-110 group-hover:border-[#254153]/20 transition-all">
+                                 <Monitor size={18} />
+                              </div>
+                              <span className="font-bold text-[#254153] text-sm">{row.device}</span>
+                           </div>
                         </td>
-                        {statuses.map((status) => (
-                          <td key={status} className="px-6 py-4 text-center">
-                            <span
-                              className={`inline-flex items-center justify-center min-w-[2.5rem] px-2 py-1 rounded-lg font-semibold ${
-                                row.counts[status]
-                                  ? "bg-white border border-[#749094]/20 text-[#254153] shadow-sm"
-                                  : "text-[#749094]/30"
-                              }`}
-                            >
-                              {row.counts[status] || 0}
-                            </span>
+                        {statuses.map(s => (
+                          <td key={s} className="px-8 py-5 text-center">
+                             <span className={`px-3 py-1.5 rounded-lg text-xs font-black transition-colors ${row.counts[s] ? 'bg-slate-100 text-[#254153] shadow-inner' : 'text-slate-300'}`}>
+                                {row.counts[s] || 0}
+                             </span>
                           </td>
                         ))}
-                        <td className="px-6 py-4 text-right font-black text-[#254153] bg-[#254153]/5">
-                          {row.total}
+                        <td className="px-8 py-5 text-right bg-[#254153]/[0.02]">
+                           <span className="text-lg font-black text-[#254153]">{row.total}</span>
                         </td>
-                      </tr>
-                    ))}
-                    {filteredStats.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={statuses.length + 2}
-                          className="px-6 py-12 text-center text-[#749094]"
-                        >
-                          {filterText
-                            ? `No se encontraron resultados para "${filterText}"`
-                            : "No hay datos disponibles para mostrar."}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                  {filteredStats.length > 0 && (
-                    <tfoot>
-                      <tr className="bg-[#254153] text-white font-bold">
-                        <td className="px-6 py-4 rounded-bl-3xl">
-                          TOTAL GENERAL
-                        </td>
-                        {statuses.map((status) => (
-                          <td key={status} className="px-6 py-4 text-center">
-                            {filteredStats.reduce(
-                              (acc, row) => acc + (row.counts[status] || 0),
-                              0,
-                            )}
-                          </td>
-                        ))}
-                        <td className="px-6 py-4 text-right rounded-br-3xl">
-                          {filteredStats.reduce(
-                            (acc, row) => acc + row.total,
-                            0,
-                          )}
-                        </td>
-                      </tr>
-                    </tfoot>
-                  )}
-                </table>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+                     </tr>
+                   ))}
+                </tbody>
+             </table>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
+
+function KPICard({ title, value, icon, trend, color }: any) {
+  const styles: any = {
+    indigo: {
+      bg: 'bg-indigo-600',
+      text: 'text-indigo-600',
+      light: 'bg-indigo-50',
+      shadow: 'shadow-indigo-500/20'
+    },
+    amber: {
+      bg: 'bg-amber-500',
+      text: 'text-amber-600',
+      light: 'bg-amber-50',
+      shadow: 'shadow-amber-500/20'
+    },
+    emerald: {
+      bg: 'bg-emerald-500',
+      text: 'text-emerald-600',
+      light: 'bg-emerald-50',
+      shadow: 'shadow-emerald-500/20'
+    },
+    rose: {
+      bg: 'bg-rose-500',
+      text: 'text-rose-600',
+      light: 'bg-rose-50',
+      shadow: 'shadow-rose-500/20'
+    }
+  }
+
+  const s = styles[color];
+
+  return (
+    <div className="relative overflow-hidden rounded-[2.5rem] bg-white p-8 border border-slate-200 shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group">
+      <div className={`absolute -right-6 -top-6 h-32 w-32 rounded-full ${s.light} blur-3xl opacity-50 transition-opacity group-hover:opacity-100`} />
+      
+      <div className="relative z-10 flex items-start justify-between mb-8">
+        <div className={`h-14 w-14 rounded-2xl ${s.bg} flex items-center justify-center text-white shadow-lg ${s.shadow} transform group-hover:scale-110 transition-transform duration-300`}>
+          {icon}
+        </div>
+        <div className={`text-[10px] font-black ${s.text} uppercase tracking-widest px-3 py-1.5 rounded-lg ${s.light}`}>
+          {trend}
+        </div>
+      </div>
+      
+      <div className="relative z-10 space-y-2">
+        <p className="text-xs font-bold text-[#749094] uppercase tracking-tighter">{title}</p>
+        <div className="flex items-baseline gap-2">
+          <h4 className="text-4xl font-black text-[#254153]">{value}</h4>
+        </div>
+      </div>
+    </div>
+  )
+}
+

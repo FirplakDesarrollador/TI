@@ -78,6 +78,11 @@ export function Sidebar() {
       href: '/dashboard/inventory/assignments',
       icon: TableIcon,
     },
+    {
+      label: 'Administrar Solicitudes',
+      href: '/dashboard/inventory/request/admin',
+      icon: List,
+    },
   ] : []
 
   return (

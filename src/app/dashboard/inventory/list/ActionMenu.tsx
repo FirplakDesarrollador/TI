@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreHorizontal, X, Save, Loader2, UserCheck, History } from 'lucide-react'
+import { MoreHorizontal, X, Save, Loader2, UserCheck, History, Wrench, CheckCircle2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
@@ -11,6 +11,10 @@ export default function ActionMenu({ device }: { device: any }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isRepairing, setIsRepairing] = useState(false)
+  const [isMarkingRepaired, setIsMarkingRepaired] = useState(false)
+  const [showRepairConfirm, setShowRepairConfirm] = useState(false)
+  const [showReturnConfirm, setShowReturnConfirm] = useState(false)
   const [formData, setFormData] = useState({
     num_serial: device.num_serial || '',
     referencia: device.referencia || '',
@@ -25,6 +29,60 @@ export default function ActionMenu({ device }: { device: any }) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleRepair = async () => {
+    setIsRepairing(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      const { error } = await supabase
+        .from('ti_historial_stock')
+        .insert({
+          producto_id: device.id,
+          estado: 'reparacion',
+          usuario: user?.email || 'Sistema',
+          observaciones_tecnicas: 'Enviado a reparación desde el panel de inventario',
+          observacion_salvedad: 'Cambio de estado a reparación'
+        })
+
+      if (error) throw error
+      
+      setShowRepairConfirm(false)
+      router.refresh()
+    } catch (error) {
+      console.error('Error sending to repair:', error)
+      alert('Error al enviar a reparación')
+    } finally {
+      setIsRepairing(false)
+    }
+  }
+
+  const handleReturnFromRepair = async () => {
+    setIsMarkingRepaired(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      const { error } = await supabase
+        .from('ti_historial_stock')
+        .insert({
+          producto_id: device.id,
+          estado: 'disponible',
+          usuario: user?.email || 'Sistema',
+          observaciones_tecnicas: 'Retornado de reparación - Operativo',
+          observacion_salvedad: 'Equipo reparado y disponible'
+        })
+
+      if (error) throw error
+      
+      setShowReturnConfirm(false)
+      router.refresh()
+    } catch (error) {
+      console.error('Error returning from repair:', error)
+      alert('Error al marcar como reparado')
+    } finally {
+      setIsMarkingRepaired(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,6 +116,29 @@ export default function ActionMenu({ device }: { device: any }) {
   return (
     <>
       <div className="flex items-center justify-end gap-3">
+        {device.latest_estado === 'reparacion' ? (
+          <button 
+            onClick={() => setShowReturnConfirm(true)}
+            disabled={isMarkingRepaired}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-600 bg-emerald-50 transition-all hover:bg-emerald-100"
+            title="Marcar como Reparado"
+          >
+            {isMarkingRepaired ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+          </button>
+        ) : (
+          <button 
+            onClick={() => setShowRepairConfirm(true)}
+            disabled={isRepairing || device.latest_estado === 'reparacion'}
+            className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all ${
+              device.latest_estado === 'reparacion' 
+                ? 'text-rose-400 bg-rose-50 cursor-not-allowed opacity-50' 
+                : 'text-[#749094] hover:bg-rose-50 hover:text-rose-600'
+            }`}
+            title="Mandar a Reparación"
+          >
+            {isRepairing ? <Loader2 size={18} className="animate-spin" /> : <Wrench size={18} />}
+          </button>
+        )}
         <button 
           onClick={() => setIsHistoryOpen(true)}
           className="flex h-8 w-8 items-center justify-center rounded-lg text-[#749094] transition-all hover:bg-[#749094]/10 hover:text-[#254153]"
@@ -87,6 +168,80 @@ export default function ActionMenu({ device }: { device: any }) {
         isOpen={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
       />
+
+      {/* Custom Repair Confirmation Modal */}
+      {showRepairConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+           <div 
+            className="absolute inset-0 bg-[#254153]/40 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => !isRepairing && setShowRepairConfirm(false)}
+           />
+           <div className="relative w-full max-w-sm overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+              <div className="mb-6 flex justify-center">
+                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+                    <Wrench size={32} />
+                 </div>
+              </div>
+              <h3 className="mb-2 text-center text-lg font-black text-[#254153]">Confirmar Reparación</h3>
+              <p className="mb-8 text-center text-sm text-[#749094] leading-relaxed">
+                ¿Estás seguro de mandar el dispositivo <span className="font-bold text-[#254153]">"{device.num_serial || device.nombre_dispositivo}"</span> a reparación?
+              </p>
+              <div className="flex flex-col gap-3">
+                 <button
+                    onClick={handleRepair}
+                    disabled={isRepairing}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#254153] py-3 text-sm font-bold text-white transition-all hover:bg-[#1a2e3b] active:scale-95 disabled:opacity-50"
+                 >
+                    {isRepairing ? <Loader2 size={18} className="animate-spin" /> : 'Confirmar Envío'}
+                 </button>
+                 <button
+                    onClick={() => setShowRepairConfirm(false)}
+                    disabled={isRepairing}
+                    className="w-full rounded-2xl bg-slate-50 py-3 text-sm font-bold text-[#749094] transition-all hover:bg-slate-100 active:scale-95 disabled:opacity-50"
+                 >
+                    Cancelar
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* Custom Return from Repair Confirmation Modal */}
+      {showReturnConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+           <div 
+            className="absolute inset-0 bg-[#254153]/40 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => !isMarkingRepaired && setShowReturnConfirm(false)}
+           />
+           <div className="relative w-full max-w-sm overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+              <div className="mb-6 flex justify-center">
+                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                    <CheckCircle2 size={32} />
+                 </div>
+              </div>
+              <h3 className="mb-2 text-center text-lg font-black text-[#254153]">¿Equipo Reparado?</h3>
+              <p className="mb-8 text-center text-sm text-[#749094] leading-relaxed">
+                ¿Deseas marcar el dispositivo <span className="font-bold text-[#254153]">"{device.num_serial || device.nombre_dispositivo}"</span> como reparado y ponerlo disponible en inventario?
+              </p>
+              <div className="flex flex-col gap-3">
+                 <button
+                    onClick={handleReturnFromRepair}
+                    disabled={isMarkingRepaired}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 active:scale-95 disabled:opacity-50"
+                 >
+                    {isMarkingRepaired ? <Loader2 size={18} className="animate-spin" /> : 'Sí, está listo'}
+                 </button>
+                 <button
+                    onClick={() => setShowReturnConfirm(false)}
+                    disabled={isMarkingRepaired}
+                    className="w-full rounded-2xl bg-slate-50 py-3 text-sm font-bold text-[#749094] transition-all hover:bg-slate-100 active:scale-95 disabled:opacity-50"
+                 >
+                    Cancelar
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#254153]/50 p-4 animate-in fade-in duration-200">

@@ -102,12 +102,28 @@ export default function RequestStatusPage() {
                 <p className="text-xs text-[#749094]">Seguimiento de requerimientos de TI</p>
               </div>
             </div>
-            <Link
-              href="/dashboard/inventory/request"
-              className="hidden rounded-xl bg-[#254153] px-4 py-2 text-sm font-bold text-white transition-all hover:bg-[#1a2e3b] sm:block"
-            >
-              Nueva Solicitud
-            </Link>
+            <div className="flex items-center gap-3">
+              {[
+                'aprendiz.desarrollo@firplak.com',
+                'juan.bedoya@firplak.com',
+                'analista2.desarrollo@firplak.com',
+                'daniel.jimenez@firplak.com',
+                'alejandro.isaza@firplak.com'
+              ].includes(user?.email || '') && (
+                <Link
+                  href="/dashboard/inventory/request/admin"
+                  className="hidden rounded-xl border border-[#254153]/20 bg-white px-4 py-2 text-sm font-bold text-[#254153] transition-all hover:bg-slate-50 sm:block"
+                >
+                  Administrar Solicitudes
+                </Link>
+              )}
+              <Link
+                href="/dashboard/inventory/request"
+                className="hidden rounded-xl bg-[#254153] px-4 py-2 text-sm font-bold text-white transition-all hover:bg-[#1a2e3b] sm:block"
+              >
+                Nueva Solicitud
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -142,8 +158,8 @@ export default function RequestStatusPage() {
                     {getStatusIcon(request.estado)}
                     {request.estado}
                   </div>
-                  <span className="text-xs text-[#749094]">
-                    ID: #{request.id.toString().slice(0, 8)}
+                  <span className="text-xs font-bold text-[#254153] bg-slate-100 px-3 py-1 rounded-lg">
+                    {request.ticket_number || `ID: #${request.id.toString().slice(0, 8)}`}
                   </span>
                 </div>
 
@@ -195,9 +211,20 @@ export default function RequestStatusPage() {
                     <div className="lg:col-span-3">
                       <div className="mt-2 rounded-2xl bg-slate-50 p-4">
                         <span className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#749094]">
-                          <MessageSquare size={12} /> Comentario
+                          <MessageSquare size={12} /> Mi Comentario
                         </span>
                         <p className="text-sm italic text-[#254153]/70">"{request.comentario}"</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {request.comentario_admin && (
+                    <div className="lg:col-span-3">
+                      <div className="mt-2 rounded-2xl bg-[#254153]/5 p-4 border border-[#254153]/10">
+                        <span className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#254153]">
+                          <UserCheck size={12} /> Respuesta de TI
+                        </span>
+                        <p className="text-sm font-medium text-[#254153]">"{request.comentario_admin}"</p>
                       </div>
                     </div>
                   )}

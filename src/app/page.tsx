@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { PlusCircle, Clock } from 'lucide-react'
+import { PlusCircle, Clock, UserCheck } from 'lucide-react'
 import { createServerSupabaseClient } from '@/lib/supabase'
 
 export default async function Home() {
@@ -82,21 +82,24 @@ export default async function Home() {
                     Solicitar Dispositivo
                   </Link>
 
-                  <Link
-                    href="/dashboard/inventory/request/status"
-                    className="inline-flex w-full items-center justify-center gap-3 rounded-xl border-2 border-[#254153]/10 bg-white px-6 py-4 text-sm font-bold text-[#254153] transition-all hover:border-[#254153]/30 hover:bg-[#254153]/5 active:scale-[0.98]"
-                  >
-                    <Clock size={20} />
-                    Ver Estados de mis Solicitudes
-                  </Link>
+
 
                   {isDashboardAuthorized && (
-                    <Link
-                      href="/dashboard"
-                      className="inline-flex w-full items-center justify-center rounded-xl bg-[#254153] px-6 py-4 text-sm font-bold text-white transition-all hover:scale-[1.02] hover:bg-[#1a2e3b] active:scale-[0.98] shadow-lg shadow-[#254153]/20"
-                    >
-                      Ir al Dashboard Principal
-                    </Link>
+                    <>
+                      <Link
+                        href="/dashboard/inventory/request/admin"
+                        className="inline-flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dashed border-[#254153]/30 bg-white px-6 py-4 text-sm font-black text-[#254153] transition-all hover:bg-[#254153]/5 active:scale-[0.98] uppercase tracking-widest shadow-sm"
+                      >
+                        <UserCheck size={20} />
+                        Administrar Solicitudes
+                      </Link>
+                      <Link
+                        href="/dashboard"
+                        className="inline-flex w-full items-center justify-center rounded-xl bg-[#254153] px-6 py-4 text-sm font-bold text-white transition-all hover:scale-[1.02] hover:bg-[#1a2e3b] active:scale-[0.98] shadow-lg shadow-[#254153]/20"
+                      >
+                        Ir al Dashboard Principal
+                      </Link>
+                    </>
                   )}
                   <form action="/auth/signout" method="post" className="w-full">
                     <button
