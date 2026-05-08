@@ -270,7 +270,7 @@ export default function AssignmentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-8 font-sans text-[#254153]">
+    <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 font-sans text-[#254153]">
       <div className="mx-auto max-w-7xl">
         <header className="mb-10">
           <div className="flex items-center gap-4 mb-6">

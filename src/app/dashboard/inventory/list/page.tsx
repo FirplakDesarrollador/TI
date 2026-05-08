@@ -74,8 +74,8 @@ export default async function InventoryList({
   })
 
   return (
-    <div className="min-h-screen bg-white p-8 font-sans text-[#254153]">
-      <div className="mx-auto max-w-6xl">
+    <div className="min-h-screen bg-white p-4 md:p-8 font-sans text-[#254153]">
+      <div className="mx-auto max-w-7xl">
         <header className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link 
