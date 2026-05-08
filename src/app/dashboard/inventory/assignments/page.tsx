@@ -423,7 +423,7 @@ export default function AssignmentsPage() {
                 </div>
                 <h3 className="text-lg font-bold text-[#254153]">No hay asignaciones activas</h3>
                 <p className="max-w-xs text-sm text-[#749094]">
-                  {searchTerm ? `No se encontraron resultados para "${searchTerm}"` : 'Todos los dispositivos están disponibles o en mantenimiento.'}
+                  {searchTerm ? `No se encontraron resultados para "${searchTerm}"` : 'Todos los dispositivos están disponibles o en reparación.'}
                 </p>
               </div>
             )}
