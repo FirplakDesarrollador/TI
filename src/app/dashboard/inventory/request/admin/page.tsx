@@ -309,7 +309,7 @@ function RequestCard({ request, isUpdating, onUpdate }: { request: any, isUpdati
               value={adminComment}
               onChange={(e) => setAdminComment(e.target.value)}
               placeholder="Añade una nota técnica o razón del cambio de estado..."
-              className="w-full h-32 rounded-3xl border border-slate-200 bg-white p-4 text-sm focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5 transition-all"
+              className="w-full h-32 rounded-3xl border border-slate-200 bg-white p-4 text-sm text-[#254153] placeholder:text-[#749094]/50 focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5 transition-all"
             />
           </div>
 
@@ -321,7 +321,7 @@ function RequestCard({ request, isUpdating, onUpdate }: { request: any, isUpdati
               value={privateNotes}
               onChange={(e) => setPrivateNotes(e.target.value)}
               placeholder="Información confidencial, proveedores, costos internos..."
-              className="w-full h-24 rounded-2xl border border-indigo-100 bg-white/50 p-4 text-sm focus:border-indigo-300 focus:outline-none transition-all"
+              className="w-full h-24 rounded-2xl border border-indigo-100 bg-white/50 p-4 text-sm text-[#254153] placeholder:text-indigo-300 focus:border-indigo-300 focus:outline-none transition-all"
             />
           </div>
         </div>
