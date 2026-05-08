@@ -87,7 +87,7 @@ export default function RequestDevicePage() {
         // Fetch cost centers from external database
         const { data: ccData } = await otherSupabase
           .from('Centro_costos')
-          .select('codigo, Título')
+          .select('codigo, "Título"')
           .order('codigo')
         
         if (ccData) {
@@ -100,7 +100,7 @@ export default function RequestDevicePage() {
         // Fetch accounts from external database
         const { data: accountsData } = await otherSupabase
           .from('cuentas')
-          .select('Título')
+          .select('"Título"')
           .order('Título')
         
         if (accountsData) {
