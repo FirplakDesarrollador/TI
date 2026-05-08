@@ -213,7 +213,7 @@ export default function RequestDevicePage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-[#749094]/10 bg-white/80 px-8 backdrop-blur-md">
+      <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-[#749094]/10 bg-white/80 px-4 md:px-8 backdrop-blur-md">
         <div className="flex items-center gap-4">
           <Link 
             href="/"
@@ -247,7 +247,7 @@ export default function RequestDevicePage() {
         </button>
       </header>
 
-      <main className="mx-auto max-w-2xl px-8 py-12">
+      <main className="mx-auto max-w-4xl px-4 md:px-8 py-12">
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div>
             <h1 className="text-3xl font-black text-[#254153] mb-2">Nueva Solicitud</h1>
