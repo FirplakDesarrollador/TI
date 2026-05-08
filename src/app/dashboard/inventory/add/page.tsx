@@ -29,7 +29,8 @@ export default function AddProduct() {
     setLoading(true)
 
     try {
-      const { error } = await supabase
+      // 1. Insert product
+      const { data: productData, error: productError } = await supabase
         .from('ti_productos')
         .insert([{
           num_serial: formData.num_serial || null,
@@ -37,10 +38,27 @@ export default function AddProduct() {
           nombre_dispositivo: formData.nombre_dispositivo,
           precio_producto: formData.precio_producto ? Number(formData.precio_producto) : null,
           detalle_producto: formData.detalle_producto || null,
-          // We don't have a 'categoria' or 'cantidad' column in ti_productos based on our previous fetch
+        }])
+        .select('id')
+        .single()
+
+      if (productError) throw productError
+
+      // 2. Insert initial history record as 'disponible'
+      const { data: { user } } = await supabase.auth.getUser()
+      const userEmail = user?.email || 'sistema@nexus.com'
+
+      const { error: historyError } = await supabase
+        .from('ti_historial_stock')
+        .insert([{
+          producto_id: productData.id,
+          estado: 'disponible',
+          usuario: userEmail,
+          observaciones_tecnicas: 'Ingreso inicial al inventario',
+          observacion_salvedad: 'Nuevo producto'
         }])
 
-      if (error) throw error
+      if (historyError) throw historyError
 
       router.push('/dashboard/inventory/list')
       router.refresh()
