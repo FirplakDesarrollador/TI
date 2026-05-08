@@ -489,7 +489,7 @@ export default function AssignmentsPage() {
                   type="text" 
                   value={editFormData.cargo}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, cargo: e.target.value }))}
-                  className="w-full rounded-xl border border-[#749094]/20 bg-[#F8FAFC] px-4 py-3 text-sm focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                  className="w-full rounded-xl border border-[#749094]/20 bg-[#F8FAFC] px-4 py-3 text-sm text-[#254153] placeholder:text-[#749094]/50 focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                 />
               </div>
 
@@ -500,7 +500,7 @@ export default function AssignmentsPage() {
                   value={editFormData.notas}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, notas: e.target.value }))}
                   placeholder="Describa el motivo del cambio o actualización de información..."
-                  className="w-full rounded-xl border border-[#749094]/20 bg-[#F8FAFC] px-4 py-3 text-sm focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                  className="w-full rounded-xl border border-[#749094]/20 bg-[#F8FAFC] px-4 py-3 text-sm text-[#254153] placeholder:text-[#749094]/50 focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                 ></textarea>
               </div>
 
