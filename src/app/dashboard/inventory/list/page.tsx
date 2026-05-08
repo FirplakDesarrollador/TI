@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
 import { ArrowLeft, Filter, PackageOpen } from 'lucide-react'
 import { createServerSupabaseClient } from '@/lib/supabase'
@@ -10,64 +12,65 @@ export default async function InventoryList({
 }: {
   searchParams: Promise<{ q?: string; status?: string; priceRange?: string }>
 }) {
-  const queryParams = await searchParams
-  const searchTerm = queryParams.q
-  const statusFilter = queryParams.status
-  const priceRangeFilter = queryParams.priceRange
+  // Resolver searchParams de forma segura y evitar el string "undefined"
+  const params = await (searchParams || {})
+  const q = params?.q || ''
+  const searchTerm = q === 'undefined' ? '' : q
+  const statusFilter = (params?.status === 'undefined' ? '' : params?.status) || ''
+  const priceRangeFilter = (params?.priceRange === 'undefined' ? '' : params?.priceRange) || ''
+
   const supabase = await createServerSupabaseClient()
   
-  // Fetch products with their historical status ordered by latest first
+  // Consulta simplificada para depuración
   let query = supabase
     .from('ti_productos')
-    .select(`
-      *,
-      ti_historial_stock (
-        estado,
-        created_at
-      )
-    `)
+    .select('*, ti_historial_stock(estado, created_at)')
 
-  if (searchTerm) {
-    query = query.or(`num_serial.ilike.%${searchTerm}%,referencia.ilike.%${searchTerm}%,nombre_dispositivo.ilike.%${searchTerm}%,detalle_producto.ilike.%${searchTerm}%`)
+  // Solo aplicar búsqueda si realmente hay un término válido
+  if (searchTerm.trim() !== '') {
+    query = query.or(`num_serial.ilike.%${searchTerm}%,referencia.ilike.%${searchTerm}%,nombre_dispositivo.ilike.%${searchTerm}%`)
   }
 
-  const { data: devices, error } = await query
-    .order('created_at', { ascending: false })
+  // Ejecutar consulta con ordenamiento
+  const { data: devices, error: fetchError } = await query.order('created_at', { ascending: false })
 
-  if (error) {
-    console.error('Error fetching inventory:', error)
+  if (fetchError) {
+    console.error('DEBUG - Error fetching inventory:', fetchError)
   }
 
+  // Procesar datos de forma segura
   const products = (devices || []).map((p: any) => {
-    // Take the most recent historical status
-    const latestHistory = p.ti_historial_stock?.sort((a: any, b: any) => 
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    )[0]
+    const history = p.ti_historial_stock || []
+    // Tomar el último estado disponible
+    const latestHistory = history.length > 0 
+      ? [...history].sort((a: any, b: any) => {
+          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+          return dateB - dateA
+        })[0]
+      : null
     
-    // If we have history, use that status, otherwise "disponible" (assuming no history means available)
     const currentStatus = latestHistory?.estado || 'Sin Registro'
-    
-    // Determine the "last updated" date for sorting (Latest of creation or history)
     const lastUpdate = latestHistory 
       ? new Date(latestHistory.created_at).getTime() 
-      : new Date(p.created_at).getTime()
+      : new Date(p.created_at || 0).getTime()
     
     return {
       ...p,
       latest_estado: currentStatus,
       last_update_ts: lastUpdate
     }
-  }).sort((a: any, b: any) => b.last_update_ts - a.last_update_ts)
-    .filter((p: any) => {
-    // Apply status filter
-    if (statusFilter && p.latest_estado !== statusFilter) return false
+  })
+  .sort((a: any, b: any) => (b.last_update_ts || 0) - (a.last_update_ts || 0))
+  .filter((p: any) => {
+    // Filtros opcionales
+    if (statusFilter && statusFilter !== '' && p.latest_estado !== statusFilter) return false
     
-    // Apply price filter
-    if (priceRangeFilter) {
+    if (priceRangeFilter && priceRangeFilter !== '') {
       const price = Number(p.precio_producto) || 0
-      if (priceRangeFilter === 'low' && price >= 1000000) return false
-      if (priceRangeFilter === 'medium' && (price < 1000000 || price > 5000000)) return false
-      if (priceRangeFilter === 'high' && price <= 5000000) return false
+      if (priceRangeFilter === 'low') return price < 1000000
+      if (priceRangeFilter === 'medium') return price >= 1000000 && price <= 5000000
+      if (priceRangeFilter === 'high') return price > 5000000
     }
     
     return true
