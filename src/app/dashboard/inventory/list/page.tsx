@@ -12,44 +12,42 @@ export default async function InventoryList({
 }: {
   searchParams: Promise<{ q?: string; status?: string; priceRange?: string }>
 }) {
-  // Resolver searchParams de forma segura
-  const params = await searchParams
-  const searchTerm = params?.q || ''
-  const statusFilter = params?.status || ''
-  const priceRangeFilter = params?.priceRange || ''
+  // Resolver searchParams de forma segura y evitar el string "undefined"
+  const params = await (searchParams || {})
+  const q = params?.q || ''
+  const searchTerm = q === 'undefined' ? '' : q
+  const statusFilter = (params?.status === 'undefined' ? '' : params?.status) || ''
+  const priceRangeFilter = (params?.priceRange === 'undefined' ? '' : params?.priceRange) || ''
 
   const supabase = await createServerSupabaseClient()
   
-  // Consulta base
+  // Consulta simplificada para depuración
   let query = supabase
     .from('ti_productos')
-    .select(`
-      *,
-      ti_historial_stock (
-        estado,
-        created_at
-      )
-    `)
+    .select('*, ti_historial_stock(estado, created_at)')
 
-  // Aplicar búsqueda si existe
+  // Solo aplicar búsqueda si realmente hay un término válido
   if (searchTerm.trim() !== '') {
-    query = query.or(`num_serial.ilike.%${searchTerm}%,referencia.ilike.%${searchTerm}%,nombre_dispositivo.ilike.%${searchTerm}%,detalle_producto.ilike.%${searchTerm}%`)
+    query = query.or(`num_serial.ilike.%${searchTerm}%,referencia.ilike.%${searchTerm}%,nombre_dispositivo.ilike.%${searchTerm}%`)
   }
 
   // Ejecutar consulta con ordenamiento
   const { data: devices, error: fetchError } = await query.order('created_at', { ascending: false })
 
   if (fetchError) {
-    console.error('Error fetching inventory:', fetchError)
+    console.error('DEBUG - Error fetching inventory:', fetchError)
   }
 
-  // Procesar datos para la UI
+  // Procesar datos de forma segura
   const products = (devices || []).map((p: any) => {
     const history = p.ti_historial_stock || []
+    // Tomar el último estado disponible
     const latestHistory = history.length > 0 
-      ? [...history].sort((a: any, b: any) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        )[0]
+      ? [...history].sort((a: any, b: any) => {
+          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+          return dateB - dateA
+        })[0]
       : null
     
     const currentStatus = latestHistory?.estado || 'Sin Registro'
@@ -65,9 +63,10 @@ export default async function InventoryList({
   })
   .sort((a: any, b: any) => (b.last_update_ts || 0) - (a.last_update_ts || 0))
   .filter((p: any) => {
-    if (statusFilter && p.latest_estado !== statusFilter) return false
+    // Filtros opcionales
+    if (statusFilter && statusFilter !== '' && p.latest_estado !== statusFilter) return false
     
-    if (priceRangeFilter) {
+    if (priceRangeFilter && priceRangeFilter !== '') {
       const price = Number(p.precio_producto) || 0
       if (priceRangeFilter === 'low') return price < 1000000
       if (priceRangeFilter === 'medium') return price >= 1000000 && price <= 5000000
