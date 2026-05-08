@@ -346,7 +346,7 @@ export default function ActionMenu({ device }: { device: any }) {
                     name="num_serial"
                     value={formData.num_serial}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-2 text-sm focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#254153]/5"
+                    className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-2 text-sm text-[#254153] placeholder:text-[#749094]/50 focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#254153]/5"
                   />
                 </div>
                 <div className="space-y-1">
@@ -355,7 +355,7 @@ export default function ActionMenu({ device }: { device: any }) {
                     name="referencia"
                     value={formData.referencia}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-2 text-sm focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#254153]/5"
+                    className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-2 text-sm text-[#254153] placeholder:text-[#749094]/50 focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#254153]/5"
                   />
                 </div>
               </div>
@@ -366,7 +366,7 @@ export default function ActionMenu({ device }: { device: any }) {
                   name="nombre_dispositivo"
                   value={formData.nombre_dispositivo}
                   onChange={handleChange}
-                  className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-2 text-sm focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#254153]/5"
+                  className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-2 text-sm text-[#254153] placeholder:text-[#749094]/50 focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#254153]/5"
                 />
               </div>
 
@@ -377,7 +377,7 @@ export default function ActionMenu({ device }: { device: any }) {
                   name="precio_producto"
                   value={formData.precio_producto}
                   onChange={handleChange}
-                  className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-2 text-sm focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#254153]/5"
+                  className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-2 text-sm text-[#254153] placeholder:text-[#749094]/50 focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#254153]/5"
                 />
               </div>
 
@@ -388,7 +388,7 @@ export default function ActionMenu({ device }: { device: any }) {
                   value={formData.detalle_producto}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-2 text-sm focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#254153]/5"
+                  className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-2 text-sm text-[#254153] placeholder:text-[#749094]/50 focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#254153]/5"
                 />
               </div>
 
