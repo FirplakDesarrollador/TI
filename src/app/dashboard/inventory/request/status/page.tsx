@@ -88,18 +88,18 @@ export default function RequestStatusPage() {
     <div className="min-h-screen bg-[#F8FAFC] pb-20">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6">
+        <div className="mx-auto max-w-5xl px-3 py-1 sm:px-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <Link
                 href="/"
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#254153]/5 text-[#254153] transition-colors hover:bg-[#254153]/10"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#254153]/5 text-[#254153] transition-colors hover:bg-[#254153]/10"
               >
-                <ArrowLeft size={20} />
+                <ArrowLeft size={16} />
               </Link>
               <div>
-                <h1 className="text-xl font-bold text-[#254153]">Mis Solicitudes</h1>
-                <p className="text-xs text-[#749094]">Seguimiento de requerimientos de TI</p>
+                <h1 className="text-base font-black text-[#254153] uppercase tracking-tighter leading-none">Mis Solicitudes</h1>
+                <p className="text-[9px] font-bold text-[#749094] uppercase tracking-widest leading-none mt-0.5">Seguimiento TI</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -112,23 +112,23 @@ export default function RequestStatusPage() {
               ].includes(user?.email || '') && (
                 <Link
                   href="/dashboard/inventory/request/admin"
-                  className="hidden rounded-xl border border-[#254153]/20 bg-white px-4 py-2 text-sm font-bold text-[#254153] transition-all hover:bg-slate-50 sm:block"
+                  className="hidden rounded-lg border border-[#254153]/20 bg-white px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-[#254153] transition-all hover:bg-slate-50 sm:block"
                 >
-                  Administrar Solicitudes
+                  Admin
                 </Link>
               )}
               <Link
                 href="/dashboard/inventory/request"
-                className="hidden rounded-xl bg-[#254153] px-4 py-2 text-sm font-bold text-white transition-all hover:bg-[#1a2e3b] sm:block"
+                className="hidden rounded-lg bg-[#254153] px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:bg-[#1a2e3b] sm:block"
               >
-                Nueva Solicitud
+                Nueva
               </Link>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 pt-8 sm:px-6">
+      <main className="mx-auto max-w-5xl px-4 pt-4 sm:px-6">
         {requests.length === 0 ? (
           <div className="flex flex-col items-center justify-center space-y-4 rounded-3xl border-2 border-dashed border-slate-200 bg-white py-20 text-center">
             <div className="rounded-full bg-slate-50 p-4">
@@ -146,85 +146,84 @@ export default function RequestStatusPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid gap-6">
+          <div className="grid gap-2">
             {requests.map((request) => (
               <div 
                 key={request.id}
-                className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 transition-all hover:border-[#254153]/20 hover:shadow-xl hover:shadow-[#254153]/5"
+                className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white p-2 transition-all hover:border-[#254153]/20 hover:shadow-lg hover:shadow-[#254153]/5"
               >
                 {/* Status Badge */}
-                <div className="mb-6 flex items-center justify-between">
-                  <div className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ${getStatusStyle(request.estado)}`}>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <div className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider ${getStatusStyle(request.estado)}`}>
                     {getStatusIcon(request.estado)}
                     {request.estado}
                   </div>
-                  <span className="text-xs font-bold text-[#254153] bg-slate-100 px-3 py-1 rounded-lg">
+                  <span className="text-[9px] font-black text-[#254153] bg-slate-100 px-2 py-0.5 rounded-md uppercase tracking-tighter">
                     {request.ticket_number || `ID: #${request.id.toString().slice(0, 8)}`}
                   </span>
                 </div>
 
                 {/* Content Grid */}
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  <div className="space-y-1">
-                    <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#749094]">
-                      <Monitor size={12} /> Dispositivo
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+                  <div className="space-y-0.5">
+                    <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-[#749094]">
+                      <Monitor size={10} /> Dispositivo
                     </span>
-                    <p className="font-bold text-[#254153]">{request.dispositivo}</p>
-                    <p className="text-sm text-[#749094]">Cantidad: {request.cantidad}</p>
+                    <p className="text-[11px] font-black text-[#254153] leading-none">{request.dispositivo}</p>
+                    <p className="text-[9px] text-[#749094]">Cant: {request.cantidad}</p>
                   </div>
 
-                  <div className="space-y-1">
-                    <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#749094]">
-                      <Calendar size={12} /> Solicitado el
+                  <div className="space-y-0.5">
+                    <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-[#749094]">
+                      <Calendar size={10} /> Solicitado
                     </span>
-                    <p className="text-sm font-medium text-[#254153]">
+                    <p className="text-[10px] font-bold text-[#254153]">
                       {new Date(request.created_at).toLocaleDateString('es-ES', { 
                         day: '2-digit', 
-                        month: 'long', 
-                        year: 'numeric'
+                        month: 'short'
                       })}
                     </p>
                   </div>
 
-                  <div className="space-y-1">
-                    <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#749094]">
-                      <UserCheck size={12} /> Jefe Aprobador
+                  <div className="space-y-0.5">
+                    <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-[#749094]">
+                      <UserCheck size={10} /> Jefe
                     </span>
-                    <p className="text-sm font-medium text-[#254153]">{request.jefe_aprobador}</p>
+                    <p className="text-[10px] font-bold text-[#254153] truncate">{request.jefe_aprobador}</p>
                   </div>
 
-                  <div className="space-y-1">
-                    <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#749094]">
-                      <Building2 size={12} /> Centro de Costos
+                  <div className="space-y-0.5">
+                    <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-[#749094]">
+                      <Building2 size={10} /> C. Costos
                     </span>
-                    <p className="text-sm font-medium text-[#254153]">{request.centro_costos}</p>
+                    <p className="text-[10px] font-bold text-[#254153] truncate">{request.centro_costos}</p>
                   </div>
 
-                  <div className="space-y-1">
-                    <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#749094]">
-                      <Hash size={12} /> Cuenta Contable
+                  <div className="space-y-0.5">
+                    <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-[#749094]">
+                      <Hash size={10} /> Cuenta
                     </span>
-                    <p className="text-sm font-medium text-[#254153]">{request.cuenta_contable}</p>
+                    <p className="text-[10px] font-bold text-[#254153] truncate">{request.cuenta_contable}</p>
                   </div>
 
                   {request.comentario && (
-                    <div className="lg:col-span-3">
-                      <div className="mt-2 rounded-2xl bg-slate-50 p-4">
-                        <span className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#749094]">
-                          <MessageSquare size={12} /> Mi Comentario
+                    <div className="lg:col-span-5">
+                      <div className="mt-1 rounded-lg bg-slate-50 p-1.5 border border-slate-100">
+                        <span className="mb-0.5 flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-[#749094]">
+                          <MessageSquare size={9} /> Comentario
                         </span>
-                        <p className="text-sm italic text-[#254153]/70">"{request.comentario}"</p>
+                        <p className="text-[10px] italic text-[#254153]/70 line-clamp-1">"{request.comentario}"</p>
                       </div>
                     </div>
                   )}
 
                   {request.comentario_admin && (
-                    <div className="lg:col-span-3">
-                      <div className="mt-2 rounded-2xl bg-[#254153]/5 p-4 border border-[#254153]/10">
-                        <span className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#254153]">
-                          <UserCheck size={12} /> Respuesta de TI
+                    <div className="lg:col-span-5">
+                      <div className="mt-1 rounded-lg bg-[#254153]/5 p-1.5 border border-[#254153]/10">
+                        <span className="mb-0.5 flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-[#254153]">
+                          <UserCheck size={9} /> Respuesta TI
                         </span>
-                        <p className="text-sm font-medium text-[#254153]">"{request.comentario_admin}"</p>
+                        <p className="text-[10px] font-bold text-[#254153]">"{request.comentario_admin}"</p>
                       </div>
                     </div>
                   )}

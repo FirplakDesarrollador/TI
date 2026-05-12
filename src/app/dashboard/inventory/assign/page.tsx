@@ -287,32 +287,32 @@ function AssignDevice() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-8 font-sans text-[#254153]">
-      <div className="mx-auto max-w-3xl">
-        <header className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-white p-2 md:p-4 font-sans text-[#254153]">
+      <div className="mx-auto max-w-2xl">
+        <header className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <Link 
               href="/dashboard"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#749094] shadow-sm ring-1 ring-[#749094]/20 transition-all hover:text-[#254153] hover:ring-[#749094]/40"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#749094] shadow-sm ring-1 ring-[#749094]/20 transition-all hover:text-[#254153] hover:ring-[#749094]/40"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={18} />
             </Link>
-            <h1 className="text-2xl font-bold text-[#254153]">Asignar Dispositivo</h1>
+            <h1 className="text-xl font-black text-[#254153]">Asignar Dispositivo</h1>
           </div>
         </header>
 
         <div className="overflow-hidden rounded-3xl border border-[#749094]/10 bg-white shadow-xl shadow-[#749094]/5">
-          <div className="border-b border-[#749094]/5 bg-[#749094]/5 p-6 flex items-center justify-between">
-            <div className="flex items-center gap-3 text-[#254153]">
-              <UserCheck size={24} />
-              <span className="font-bold">Nueva Asignación</span>
+          <div className="border-b border-[#749094]/5 bg-[#749094]/5 px-4 py-2 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[#254153]">
+              <UserCheck size={18} />
+              <span className="text-sm font-black uppercase tracking-tight">Nueva Asignación</span>
             </div>
-            <div className="text-xs font-semibold text-[#749094] uppercase tracking-wider">
+            <div className="text-[10px] font-bold text-[#749094] uppercase tracking-wider">
               {formData.fecha_asignacion}
             </div>
           </div>
           
-          <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          <form onSubmit={handleSubmit} className="p-4 space-y-3">
             {loading ? (
               <div className="flex h-64 flex-col items-center justify-center gap-4">
                 <Loader2 className="animate-spin text-[#254153]" size={40} />
@@ -320,14 +320,14 @@ function AssignDevice() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   {/* Persona */}
-                  <SearchableSelect
-                    label="Persona"
-                    required
-                    icon={<UserCheck size={16} />}
-                    className="w-full flex items-center justify-between rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
-                    placeholder="Seleccione una persona..."
+                    <SearchableSelect
+                      label="Persona"
+                      required
+                      icon={<UserCheck size={14} />}
+                      className="w-full flex items-center justify-between rounded-lg border border-[#749094]/20 bg-white px-3 py-1.5 text-[12px] shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                      placeholder="Seleccione una persona..."
                     options={employees.map(emp => ({
                       id: emp.id,
                       label: emp.nombreCompleto,
@@ -345,13 +345,12 @@ function AssignDevice() {
                     }}
                   />
 
-                  {/* Dispositivo */}
-                  <div className="space-y-4">
+                  <div className="space-y-1">
                     <SearchableSelect
                       label="Dispositivo"
                       required
-                      icon={<Package size={16} />}
-                      className="w-full flex items-center justify-between rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                      icon={<Package size={14} />}
+                      className="w-full flex items-center justify-between rounded-lg border border-[#749094]/20 bg-white px-3 py-1.5 text-[12px] shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                       placeholder="Seleccione un dispositivo..."
                       options={devices.map(dev => ({
                         id: dev.id,
@@ -372,14 +371,14 @@ function AssignDevice() {
                     />
                     
                     {formData.device_id && (
-                      <div className="rounded-xl border border-[#749094]/10 bg-[#749094]/5 p-4 space-y-2 animate-in fade-in slide-in-from-top-1">
-                        <div className="flex justify-between text-xs">
+                      <div className="rounded-lg border border-[#749094]/10 bg-[#749094]/5 px-3 py-2 space-y-1 animate-in fade-in slide-in-from-top-1">
+                        <div className="flex justify-between text-[10px]">
                           <span className="font-semibold text-[#749094]">Serial:</span>
                           <span className="font-bold text-[#254153]">
                             {devices.find(d => d.id.toString() === formData.device_id)?.num_serial || 'No registrado'}
                           </span>
                         </div>
-                        <div className="flex justify-between text-xs">
+                        <div className="flex justify-between text-[10px]">
                           <span className="font-semibold text-[#749094]">Referencia:</span>
                           <span className="text-[#254153]">
                             {devices.find(d => d.id.toString() === formData.device_id)?.referencia || 'N/A'}
@@ -390,42 +389,42 @@ function AssignDevice() {
                   </div>
 
                   {/* Cargo */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-[#749094]">Cargo</label>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-[#749094] uppercase tracking-tighter">Cargo</label>
                     <input 
                       name="cargo"
                       value={formData.cargo}
                       onChange={handleChange}
                       type="text" 
                       placeholder="Ej. Ejecutivo de Cuentas"
-                      className="w-full rounded-xl border border-[#749094]/20 bg-[#749094]/5 px-4 py-3 text-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                      className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-1.5 text-[12px] transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                     />
                   </div>
 
                   {/* Área */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-[#749094]">Área</label>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-[#749094] uppercase tracking-tighter">Área</label>
                     <input 
                       name="area"
                       value={formData.area}
                       onChange={handleChange}
                       type="text" 
                       placeholder="Ej. Comercial"
-                      className="w-full rounded-xl border border-[#749094]/20 bg-[#749094]/5 px-4 py-3 text-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                      className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-1.5 text-[12px] transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                     />
                   </div>
                 </div>
 
                 {/* Notas */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-[#749094]">Notas / Observaciones</label>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#749094] uppercase tracking-tighter">Notas / Observaciones</label>
                   <textarea 
                     name="notas"
                     value={formData.notas}
                     onChange={handleChange}
-                    rows={3}
-                    placeholder="Detalles sobre el estado del equipo o condiciones de entrega..."
-                    className="w-full rounded-xl border border-[#749094]/20 bg-[#749094]/5 px-4 py-3 text-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                    rows={2}
+                    placeholder="Detalles sobre el estado del equipo..."
+                    className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-1.5 text-[12px] transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                   ></textarea>
                 </div>
 
@@ -435,14 +434,14 @@ function AssignDevice() {
                   onClear={handleSignatureClear} 
                 />
 
-                <div className="pt-6 border-t border-[#749094]/10">
+                <div className="pt-3 border-t border-[#749094]/10">
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#254153] px-6 py-4 text-sm font-bold text-white shadow-lg shadow-[#254153]/20 transition-all hover:bg-[#1a2e3b] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#254153] px-6 py-2.5 text-[12px] font-black uppercase tracking-widest text-white shadow-lg shadow-[#254153]/20 transition-all hover:bg-[#1a2e3b] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {submitting ? <Loader2 className="animate-spin" size={20} /> : <FileText size={20} />}
-                    {submitting ? 'Generando acta...' : 'Generar Acta de Asignación (PDF)'}
+                    {submitting ? <Loader2 className="animate-spin" size={16} /> : <FileText size={16} />}
+                    {submitting ? 'Generando acta...' : 'Generar Acta (PDF)'}
                   </button>
                 </div>
               </>

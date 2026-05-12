@@ -77,109 +77,86 @@ export default async function InventoryList({
   })
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 font-sans text-[#254153]">
-      <div className="mx-auto max-w-[90rem]">
-        <header className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-[#F8FAFC] p-2 md:p-4 font-sans text-[#254153]">
+      <div className="mx-auto w-full px-2">
+        <header className="mb-2 flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <Link 
               href="/dashboard"
-              className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#749094] shadow-sm ring-1 ring-[#749094]/10 transition-all hover:text-[#254153] hover:shadow-md"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[#749094] shadow-sm ring-1 ring-[#749094]/10 transition-all hover:text-[#254153] hover:shadow-md"
             >
-              <ArrowLeft size={22} />
+              <ArrowLeft size={18} />
             </Link>
             <div>
-              <h1 className="text-2xl font-black text-[#254153] tracking-tight">Inventario Global</h1>
-              <p className="text-xs font-medium text-[#749094]">Gestión y control de activos TI</p>
-            </div>
+            <h1 className="text-base font-black text-[#254153] tracking-tight leading-none uppercase">Inventario</h1>
+            <p className="text-[9px] font-bold text-[#749094] uppercase tracking-widest mt-0.5">Control de activos</p>
           </div>
-          
-          <Link
-            href="/dashboard/inventory/add"
-            className="hidden items-center gap-2 rounded-2xl bg-[#254153] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#254153]/20 transition-all hover:bg-[#1a2e3b] hover:scale-[1.02] active:scale-[0.98] sm:flex"
-          >
-            <PackageOpen size={18} />
-            Nuevo Producto
+        </div>
+        
+        <Link
+          href="/dashboard/inventory/add"
+          className="hidden items-center gap-2 rounded-lg bg-[#254153] px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-[#254153]/20 transition-all hover:bg-[#1a2e3b] sm:flex"
+        >
+            <PackageOpen size={16} />
+            Nuevo
           </Link>
         </header>
 
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-1 items-center gap-3">
             <SearchInput />
             <div className="flex items-center gap-2">
               {(statusFilter || priceRangeFilter || searchTerm) && (
                 <Link
                   href="/dashboard/inventory/list"
-                  className="flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 transition-all hover:bg-red-100"
+                  className="flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-red-600 transition-all hover:bg-red-100"
                 >
-                  <PackageOpen size={18} />
-                  Limpiar Filtros
+                  <PackageOpen size={16} />
+                  Limpiar
                 </Link>
               )}
             </div>
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
+        <div className="overflow-hidden rounded-[1rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] font-bold uppercase tracking-widest text-[#749094]">
-                  <th className="px-4 py-4">Serial</th>
-                  <th className="px-4 py-4">Información del Equipo</th>
-                  <th className="px-4 py-4 text-center">Categoría</th>
-                  <th className="px-4 py-4 text-center">
-                    <ColumnFilter 
-                      title="Precio" 
-                      paramKey="priceRange" 
-                      options={[
-                        { label: 'Cualquiera', value: '' },
-                        { label: 'Menos de $1M', value: 'low' },
-                        { label: '$1M - $5M', value: 'medium' },
-                        { label: 'Más de $5M', value: 'high' }
-                      ]} 
-                    />
-                  </th>
-                  <th className="px-4 py-4 text-center">
-                    <ColumnFilter 
-                      title="Estado" 
-                      paramKey="status" 
-                      options={[
-                        { label: 'Todos', value: '' },
-                        { label: 'Asignados', value: 'asignado' },
-                        { label: 'Disponibles', value: 'disponible' },
-                        { label: 'En Reparación', value: 'reparacion' },
-                        { label: 'Sin Registro', value: 'Sin Registro' }
-                      ]} 
-                    />
-                  </th>
-                  <th className="hidden px-4 py-4 xl:table-cell">Detalle</th>
-                  <th className="px-4 py-4 text-right">Acciones</th>
+                <tr className="border-b border-slate-100 bg-slate-50/50 text-[8px] font-black uppercase tracking-widest text-[#749094]">
+                  <th className="px-2 py-1.5">Serial</th>
+                  <th className="px-2 py-1.5">Equipo</th>
+                  <th className="px-2 py-1.5 text-center">Categoría</th>
+                  <th className="px-2 py-1.5 text-center">Precio</th>
+                  <th className="px-2 py-1.5 text-center">Estado</th>
+                  <th className="hidden px-2 py-1.5 xl:table-cell">Detalle</th>
+                  <th className="px-2 py-1.5 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-[13px]">
                 {products.map((device: any) => (
                   <tr key={device.id} className="group transition-colors hover:bg-slate-50/50">
-                    <td className="whitespace-nowrap px-4 py-4 font-bold text-[#254153]">
-                      <span className="rounded-lg bg-slate-100 px-2 py-1 font-mono text-[10px] text-[#254153]">
+                    <td className="whitespace-nowrap px-2 py-0.5 font-bold text-[#254153]">
+                      <span className="rounded bg-slate-100 px-1 py-0.5 font-mono text-[8px] text-[#254153]">
                         {device.num_serial || 'S/N'}
                       </span>
                     </td>
-                    <td className="px-4 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-[#254153] line-clamp-1">{device.nombre_dispositivo}</span>
-                        <span className="text-[11px] text-[#749094] line-clamp-1">{device.referencia || '—'}</span>
+                    <td className="px-2 py-0.5">
+                      <div className="flex flex-col gap-0">
+                        <span className="font-bold text-[#254153] line-clamp-1 leading-none text-[11px]">{device.nombre_dispositivo}</span>
+                        <span className="text-[8px] text-[#749094] line-clamp-1 leading-none mt-0.5">{device.referencia || '—'}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-center">
-                      <span className="inline-flex rounded-lg bg-[#254153]/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-tight text-[#254153] ring-1 ring-[#254153]/10">
+                    <td className="px-2 py-0.5 text-center">
+                      <span className="inline-flex rounded bg-[#254153]/5 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tight text-[#254153] ring-1 ring-[#254153]/10">
                         {device.ti_categorias_productos?.categoria || 'N/A'}
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-4 text-center font-bold text-[#254153]">
+                    <td className="whitespace-nowrap px-2 py-0.5 text-center font-bold text-[#254153] text-[11px]">
                       {device.precio_producto ? `$${Number(device.precio_producto).toLocaleString()}` : '—'}
                     </td>
-                    <td className="px-4 py-4 text-center">
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-tight ${
+                    <td className="px-2 py-0.5 text-center">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tight ${
                         device.latest_estado === 'asignado' ? 'bg-amber-100 text-amber-700' :
                         device.latest_estado === 'reparacion' ? 'bg-rose-100 text-rose-700' :
                         device.latest_estado === 'Sin Registro' ? 'bg-slate-100 text-slate-500' :
@@ -191,15 +168,15 @@ export default async function InventoryList({
                           device.latest_estado === 'Sin Registro' ? 'bg-slate-400' :
                           'bg-emerald-500'
                         }`} />
-                        {device.latest_estado === 'reparacion' ? 'Reparación' : device.latest_estado}
+                        {device.latest_estado === 'reparacion' ? 'Rep' : device.latest_estado}
                       </span>
                     </td>
-                    <td className="hidden max-w-[150px] px-4 py-4 xl:table-cell">
-                      <p className="truncate text-[11px] text-[#749094]/80" title={device.detalle_producto}>
+                    <td className="hidden max-w-[120px] px-2 py-0.5 xl:table-cell">
+                      <p className="truncate text-[8px] text-[#749094]/80" title={device.detalle_producto}>
                         {device.detalle_producto || '—'}
                       </p>
                     </td>
-                    <td className="px-4 py-4 text-right">
+                    <td className="px-2 py-0.5 text-right">
                       <ActionMenu device={device} />
                     </td>
                   </tr>

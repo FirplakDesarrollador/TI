@@ -266,28 +266,28 @@ export default function ActionMenu({ device }: { device: any }) {
             className="absolute inset-0 bg-[#254153]/40 backdrop-blur-sm animate-in fade-in duration-300"
             onClick={() => !isRepairing && setShowRepairConfirm(false)}
            />
-           <div className="relative w-full max-w-sm overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200">
-              <div className="mb-6 flex justify-center">
-                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
-                    <Wrench size={32} />
+           <div className="relative w-full max-w-xs overflow-hidden rounded-2xl bg-white p-4 shadow-2xl animate-in zoom-in-95 duration-200 text-center">
+              <div className="mb-3 flex justify-center">
+                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+                    <Wrench size={24} />
                  </div>
               </div>
-              <h3 className="mb-2 text-center text-lg font-black text-[#254153]">Confirmar Reparación</h3>
-              <p className="mb-8 text-center text-sm text-[#749094] leading-relaxed">
-                ¿Estás seguro de mandar el dispositivo <span className="font-bold text-[#254153]">"{device.num_serial || device.nombre_dispositivo}"</span> a reparación?
+              <h3 className="mb-1 text-sm font-black text-[#254153] uppercase">Confirmar Reparación</h3>
+              <p className="mb-4 text-[11px] text-[#749094] leading-tight">
+                ¿Mandar <span className="font-bold text-[#254153]">"{device.num_serial || device.nombre_dispositivo}"</span> a reparación?
               </p>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
                  <button
                     onClick={handleRepair}
                     disabled={isRepairing}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#254153] py-3 text-sm font-bold text-white transition-all hover:bg-[#1a2e3b] active:scale-95 disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#254153] py-2 text-xs font-bold text-white transition-all hover:bg-[#1a2e3b] active:scale-95 disabled:opacity-50"
                  >
-                    {isRepairing ? <Loader2 size={18} className="animate-spin" /> : 'Confirmar Envío'}
+                    {isRepairing ? <Loader2 size={14} className="animate-spin" /> : 'Confirmar Envío'}
                  </button>
                  <button
                     onClick={() => setShowRepairConfirm(false)}
                     disabled={isRepairing}
-                    className="w-full rounded-2xl bg-slate-50 py-3 text-sm font-bold text-[#749094] transition-all hover:bg-slate-100 active:scale-95 disabled:opacity-50"
+                    className="w-full rounded-lg bg-slate-50 py-2 text-xs font-bold text-[#749094] transition-all hover:bg-slate-100 active:scale-95 disabled:opacity-50"
                  >
                     Cancelar
                  </button>
@@ -303,29 +303,29 @@ export default function ActionMenu({ device }: { device: any }) {
             className="absolute inset-0 bg-[#254153]/40 backdrop-blur-sm animate-in fade-in duration-300"
             onClick={() => !isDeleting && setShowDeleteConfirm(false)}
            />
-           <div className="relative w-full max-w-sm overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200">
-              <div className="mb-6 flex justify-center">
-                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
-                    <Trash2 size={32} />
+           <div className="relative w-full max-w-xs overflow-hidden rounded-2xl bg-white p-4 shadow-2xl animate-in zoom-in-95 duration-200 text-center">
+              <div className="mb-3 flex justify-center">
+                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+                    <Trash2 size={24} />
                  </div>
               </div>
-              <h3 className="mb-2 text-center text-lg font-black text-[#254153]">Eliminar Producto</h3>
-              <p className="mb-8 text-center text-sm text-[#749094] leading-relaxed">
-                ¿Estás completamente seguro de eliminar el producto <span className="font-bold text-[#254153]">"{device.num_serial || device.nombre_dispositivo}"</span>?<br/>
-                <span className="text-xs text-rose-500 font-bold uppercase tracking-tighter mt-2 block">Esta acción no se puede deshacer.</span>
+              <h3 className="mb-1 text-sm font-black text-[#254153] uppercase">Eliminar Producto</h3>
+              <p className="mb-4 text-[11px] text-[#749094] leading-tight">
+                ¿Eliminar <span className="font-bold text-[#254153]">"{device.num_serial || device.nombre_dispositivo}"</span>?<br/>
+                <span className="text-[10px] text-rose-500 font-bold uppercase mt-1 block tracking-tighter">Esta acción no se puede deshacer.</span>
               </p>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
                  <button
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-rose-600 py-3 text-sm font-bold text-white transition-all hover:bg-rose-700 active:scale-95 disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-rose-600 py-2 text-xs font-bold text-white transition-all hover:bg-rose-700 active:scale-95 disabled:opacity-50"
                  >
-                    {isDeleting ? <Loader2 size={18} className="animate-spin" /> : 'Sí, Eliminar Permanentemente'}
+                    {isDeleting ? <Loader2 size={14} className="animate-spin" /> : 'Eliminar'}
                  </button>
                  <button
                     onClick={() => setShowDeleteConfirm(false)}
                     disabled={isDeleting}
-                    className="w-full rounded-2xl bg-slate-50 py-3 text-sm font-bold text-[#749094] transition-all hover:bg-slate-100 active:scale-95 disabled:opacity-50"
+                    className="w-full rounded-lg bg-slate-50 py-2 text-xs font-bold text-[#749094] transition-all hover:bg-slate-100 active:scale-95 disabled:opacity-50"
                  >
                     Cancelar
                  </button>
@@ -341,28 +341,28 @@ export default function ActionMenu({ device }: { device: any }) {
             className="absolute inset-0 bg-[#254153]/40 backdrop-blur-sm animate-in fade-in duration-300"
             onClick={() => !isMarkingRepaired && setShowReturnConfirm(false)}
            />
-           <div className="relative w-full max-w-sm overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200">
-              <div className="mb-6 flex justify-center">
-                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
-                    <CheckCircle2 size={32} />
+           <div className="relative w-full max-w-xs overflow-hidden rounded-2xl bg-white p-4 shadow-2xl animate-in zoom-in-95 duration-200 text-center">
+              <div className="mb-3 flex justify-center">
+                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                    <CheckCircle2 size={24} />
                  </div>
               </div>
-              <h3 className="mb-2 text-center text-lg font-black text-[#254153]">¿Equipo Reparado?</h3>
-              <p className="mb-8 text-center text-sm text-[#749094] leading-relaxed">
-                ¿Deseas marcar el dispositivo <span className="font-bold text-[#254153]">"{device.num_serial || device.nombre_dispositivo}"</span> como reparado y ponerlo disponible en inventario?
+              <h3 className="mb-1 text-sm font-black text-[#254153] uppercase">¿Reparado?</h3>
+              <p className="mb-4 text-[11px] text-[#749094] leading-tight">
+                ¿Marcar <span className="font-bold text-[#254153]">"{device.num_serial || device.nombre_dispositivo}"</span> como disponible?
               </p>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
                  <button
                     onClick={handleReturnFromRepair}
                     disabled={isMarkingRepaired}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 active:scale-95 disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2 text-xs font-bold text-white transition-all hover:bg-emerald-700 active:scale-95 disabled:opacity-50"
                  >
-                    {isMarkingRepaired ? <Loader2 size={18} className="animate-spin" /> : 'Sí, está listo'}
+                    {isMarkingRepaired ? <Loader2 size={14} className="animate-spin" /> : 'Sí, está listo'}
                  </button>
                  <button
                     onClick={() => setShowReturnConfirm(false)}
                     disabled={isMarkingRepaired}
-                    className="w-full rounded-2xl bg-slate-50 py-3 text-sm font-bold text-[#749094] transition-all hover:bg-slate-100 active:scale-95 disabled:opacity-50"
+                    className="w-full rounded-lg bg-slate-50 py-2 text-xs font-bold text-[#749094] transition-all hover:bg-slate-100 active:scale-95 disabled:opacity-50"
                  >
                     Cancelar
                  </button>
@@ -373,18 +373,18 @@ export default function ActionMenu({ device }: { device: any }) {
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#254153]/50 p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl text-left border border-[#749094]/10">
-            <div className="flex items-center justify-between border-b border-[#749094]/5 bg-[#749094]/5 px-6 py-4">
-              <h2 className="text-lg font-bold text-[#254153]">Editar Producto</h2>
+          <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl text-left border border-[#749094]/10">
+            <div className="flex items-center justify-between border-b border-[#749094]/5 bg-[#749094]/5 px-4 py-2">
+              <h2 className="text-sm font-black text-[#254153] uppercase tracking-tight">Editar Producto</h2>
               <button 
                 onClick={() => setIsOpen(false)}
-                className="rounded-full p-2 text-[#749094] hover:bg-[#749094]/10 hover:text-[#254153] transition-colors"
+                className="rounded-full p-1 text-[#749094] hover:bg-[#749094]/10 hover:text-[#254153] transition-colors"
               >
-                <X size={20} />
+                <X size={16} />
               </button>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-4 space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-[#749094]">Serial</label>
@@ -461,31 +461,31 @@ export default function ActionMenu({ device }: { device: any }) {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-[#749094]">Detalle</label>
+                <label className="text-[11px] font-bold text-[#749094] uppercase tracking-tighter">Detalle / Notas Técnicas</label>
                 <textarea 
                   name="detalle_producto"
                   value={formData.detalle_producto}
                   onChange={handleChange}
-                  rows={3}
-                  className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-2 text-sm text-[#254153] placeholder:text-[#749094]/50 focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#254153]/5"
+                  rows={2}
+                  className="w-full rounded-lg border border-[#749094]/20 bg-[#749094]/5 px-3 py-1.5 text-[12px] text-[#254153] placeholder:text-[#749094]/50 focus:border-[#254153]/30 focus:bg-white focus:outline-none"
                 />
               </div>
 
-              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-[#749094]/10">
+              <div className="mt-2 flex justify-end gap-2 pt-3 border-t border-[#749094]/10">
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="rounded-lg px-4 py-2.5 text-sm font-semibold text-[#749094] hover:bg-[#749094]/10 transition-colors"
+                  className="rounded-lg px-3 py-1.5 text-[11px] font-bold text-[#749094] hover:bg-[#749094]/10 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex items-center gap-2 rounded-lg bg-[#254153] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#1a2e3b] transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 rounded-lg bg-[#254153] px-4 py-1.5 text-[11px] font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#1a2e3b] transition-colors disabled:opacity-70"
                 >
-                  {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                  {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+                  {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                  {isSubmitting ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
             </form>
