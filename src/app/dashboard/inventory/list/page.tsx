@@ -24,7 +24,7 @@ export default async function InventoryList({
   // Consulta simplificada para depuración
   let query = supabase
     .from('ti_productos')
-    .select('*, ti_historial_stock(estado, created_at)')
+    .select('*, ti_historial_stock(estado, created_at), ti_categorias_productos(categoria)')
 
   // Solo aplicar búsqueda si realmente hay un término válido
   if (searchTerm.trim() !== '') {
@@ -77,24 +77,28 @@ export default async function InventoryList({
   })
 
   return (
-    <div className="min-h-screen bg-white p-4 md:p-8 font-sans text-[#254153]">
-      <div className="mx-auto max-w-7xl">
+    <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 font-sans text-[#254153]">
+      <div className="mx-auto max-w-[90rem]">
         <header className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link 
               href="/dashboard"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#749094] shadow-sm ring-1 ring-[#749094]/20 transition-all hover:text-[#254153] hover:ring-[#749094]/40"
+              className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#749094] shadow-sm ring-1 ring-[#749094]/10 transition-all hover:text-[#254153] hover:shadow-md"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={22} />
             </Link>
-            <h1 className="text-2xl font-bold text-[#254153]">Productos en Inventario</h1>
+            <div>
+              <h1 className="text-2xl font-black text-[#254153] tracking-tight">Inventario Global</h1>
+              <p className="text-xs font-medium text-[#749094]">Gestión y control de activos TI</p>
+            </div>
           </div>
           
           <Link
             href="/dashboard/inventory/add"
-            className="hidden rounded-xl bg-[#254153] px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#1a2e3b] sm:block"
+            className="hidden items-center gap-2 rounded-2xl bg-[#254153] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#254153]/20 transition-all hover:bg-[#1a2e3b] hover:scale-[1.02] active:scale-[0.98] sm:flex"
           >
-            + Nuevo Producto
+            <PackageOpen size={18} />
+            Nuevo Producto
           </Link>
         </header>
 
@@ -102,10 +106,6 @@ export default async function InventoryList({
           <div className="flex flex-1 items-center gap-3">
             <SearchInput />
             <div className="flex items-center gap-2">
-              <button className="flex items-center gap-2 rounded-xl border border-[#749094]/20 bg-white px-4 py-2.5 text-sm font-semibold text-[#254153] shadow-sm transition-all hover:bg-[#749094]/5">
-                <Filter size={18} className="text-[#749094]" />
-                Filtrar
-              </button>
               {(statusFilter || priceRangeFilter || searchTerm) && (
                 <Link
                   href="/dashboard/inventory/list"
@@ -119,15 +119,15 @@ export default async function InventoryList({
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-[#749094]/10 bg-white shadow-xl shadow-[#749094]/5">
+        <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-[#749094]/10 bg-[#749094]/5 text-xs font-bold uppercase tracking-wider text-[#749094]">
-                  <th className="px-6 py-4 text-left">Serial</th>
-                  <th className="px-6 py-4 text-left">Referencia</th>
-                  <th className="px-6 py-4">Dispositivo</th>
-                  <th className="px-6 py-4">
+                <tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] font-bold uppercase tracking-widest text-[#749094]">
+                  <th className="px-4 py-4">Serial</th>
+                  <th className="px-4 py-4">Información del Equipo</th>
+                  <th className="px-4 py-4 text-center">Categoría</th>
+                  <th className="px-4 py-4 text-center">
                     <ColumnFilter 
                       title="Precio" 
                       paramKey="priceRange" 
@@ -139,7 +139,7 @@ export default async function InventoryList({
                       ]} 
                     />
                   </th>
-                    <th className="px-6 py-4">
+                  <th className="px-4 py-4 text-center">
                     <ColumnFilter 
                       title="Estado" 
                       paramKey="status" 
@@ -152,37 +152,54 @@ export default async function InventoryList({
                       ]} 
                     />
                   </th>
-                  <th className="px-6 py-4 text-left">Detalle</th>
-                  <th className="px-6 py-4 text-right">Acciones</th>
+                  <th className="hidden px-4 py-4 xl:table-cell">Detalle</th>
+                  <th className="px-4 py-4 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#749094]/10 text-sm">
+              <tbody className="divide-y divide-slate-100 text-[13px]">
                 {products.map((device: any) => (
-                  <tr key={device.id} className="transition-colors hover:bg-[#749094]/5">
-                    <td className="px-6 py-4 font-semibold text-[#254153]">
-                      {device.num_serial || 'Sin Serial'}
-                    </td>
-                    <td className="px-6 py-4 text-[#749094] font-medium">
-                      {device.referencia || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 text-[#749094] font-medium">
-                      {device.nombre_dispositivo}
-                    </td>
-                    <td className="px-6 py-4 text-[#749094]">
-                      {device.precio_producto ? `$${Number(device.precio_producto).toLocaleString()}` : 'N/A'}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${
-                        device.latest_estado === 'asignado' ? 'bg-amber-50 text-amber-600' :
-                        device.latest_estado === 'reparacion' ? 'bg-rose-50 text-rose-600' :
-                        device.latest_estado === 'Sin Registro' ? 'bg-[#749094]/10 text-[#749094]' :
-                        'bg-emerald-50 text-emerald-600'
-                      }`}>
-                        {device.latest_estado === 'reparacion' ? 'En Reparación' : device.latest_estado}
+                  <tr key={device.id} className="group transition-colors hover:bg-slate-50/50">
+                    <td className="whitespace-nowrap px-4 py-4 font-bold text-[#254153]">
+                      <span className="rounded-lg bg-slate-100 px-2 py-1 font-mono text-[10px] text-[#254153]">
+                        {device.num_serial || 'S/N'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-[#749094]/80 max-w-xs truncate">{device.detalle_producto || 'Sin detalle'}</td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-4 py-4">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-[#254153] line-clamp-1">{device.nombre_dispositivo}</span>
+                        <span className="text-[11px] text-[#749094] line-clamp-1">{device.referencia || '—'}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <span className="inline-flex rounded-lg bg-[#254153]/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-tight text-[#254153] ring-1 ring-[#254153]/10">
+                        {device.ti_categorias_productos?.categoria || 'N/A'}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-4 text-center font-bold text-[#254153]">
+                      {device.precio_producto ? `$${Number(device.precio_producto).toLocaleString()}` : '—'}
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-tight ${
+                        device.latest_estado === 'asignado' ? 'bg-amber-100 text-amber-700' :
+                        device.latest_estado === 'reparacion' ? 'bg-rose-100 text-rose-700' :
+                        device.latest_estado === 'Sin Registro' ? 'bg-slate-100 text-slate-500' :
+                        'bg-emerald-100 text-emerald-700'
+                      }`}>
+                        <span className={`h-1 w-1 rounded-full ${
+                          device.latest_estado === 'asignado' ? 'bg-amber-500' :
+                          device.latest_estado === 'reparacion' ? 'bg-rose-500' :
+                          device.latest_estado === 'Sin Registro' ? 'bg-slate-400' :
+                          'bg-emerald-500'
+                        }`} />
+                        {device.latest_estado === 'reparacion' ? 'Reparación' : device.latest_estado}
+                      </span>
+                    </td>
+                    <td className="hidden max-w-[150px] px-4 py-4 xl:table-cell">
+                      <p className="truncate text-[11px] text-[#749094]/80" title={device.detalle_producto}>
+                        {device.detalle_producto || '—'}
+                      </p>
+                    </td>
+                    <td className="px-4 py-4 text-right">
                       <ActionMenu device={device} />
                     </td>
                   </tr>
