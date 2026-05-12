@@ -34,17 +34,17 @@ export default function SearchInput() {
   }, [searchTerm, pathname, router, searchParams])
 
   return (
-    <div className="relative flex-1 max-w-md">
+    <div className="relative flex-1 max-w-sm">
       <Search 
-        className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${isPending ? 'text-[#254153]' : 'text-[#749094]'}`} 
-        size={18} 
+        className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${isPending ? 'text-[#254153]' : 'text-[#749094]'}`} 
+        size={14} 
       />
       <input 
         type="text" 
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Buscar por serial, referencia o nombre..."
-        className="w-full rounded-2xl border border-[#749094]/20 bg-white py-3 pl-12 pr-4 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5 placeholder:text-[#749094]/60 text-[#254153]"
+        placeholder="Buscar dispositivo..."
+        className="w-full rounded-lg border border-[#749094]/20 bg-white py-1.5 pl-9 pr-3 text-[12px] shadow-sm transition-all focus:border-[#254153]/30 focus:outline-none placeholder:text-[#749094]/60 text-[#254153]"
       />
       {isPending && (
         <div className="absolute right-4 top-1/2 -translate-y-1/2">
