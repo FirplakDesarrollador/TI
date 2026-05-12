@@ -208,8 +208,15 @@ function AssignDevice() {
       })
 
       // 3. Upload to Supabase Storage
-      const employeeNameClean = (selectedEmployee?.nombreCompleto || 'Desconocido').replace(/\s+/g, '_')
-      const deviceSerialClean = selectedDevice?.num_serial || Date.now().toString()
+      const sanitizeFilename = (str: string) => {
+        return str
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
+          .replace(/[^a-zA-Z0-9._-]/g, '_') // Reemplazar caracteres especiales por guion bajo
+      }
+
+      const employeeNameClean = sanitizeFilename(selectedEmployee?.nombreCompleto || 'Desconocido')
+      const deviceSerialClean = sanitizeFilename(selectedDevice?.num_serial || Date.now().toString())
       const fileName = `Acta_Entrega_${deviceSerialClean}_${employeeNameClean}.pdf`
       const filePath = `${formData.employee_id}/${fileName}`
 
