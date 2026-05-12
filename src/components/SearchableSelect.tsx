@@ -12,7 +12,7 @@ interface Option {
 interface SearchableSelectProps {
   options: Option[]
   placeholder: string
-  label: string
+  label?: string
   value: string | number
   onChange: (value: string | number) => void
   required?: boolean
@@ -55,10 +55,12 @@ export function SearchableSelect({
 
   return (
     <div className="space-y-2" ref={containerRef}>
-      <label className="text-sm font-bold text-[#254153] flex items-center gap-2">
-        {icon && <span className="text-[#749094]">{icon}</span>}
-        {label} {required && <span className="text-rose-500">*</span>}
-      </label>
+      {label && (
+        <label className="text-sm font-bold text-[#254153] flex items-center gap-2">
+          {icon && <span className="text-[#749094]">{icon}</span>}
+          {label} {required && <span className="text-rose-500">*</span>}
+        </label>
+      )}
       <div className="relative">
         <button
           type="button"
