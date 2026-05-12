@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { ArrowLeft, Save, PackagePlus, Loader2 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
@@ -13,11 +13,28 @@ export default function AddProduct() {
     referencia: '',
     nombre_dispositivo: '',
     precio_producto: '',
-    detalle_producto: ''
+    detalle_producto: '',
+    categoria_id: '',
+    nueva_categoria: ''
   })
-  
+
+  const [categories, setCategories] = useState<{ id: number, categoria: string }[]>([])
+
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    async function fetchCategories() {
+      const { data, error } = await supabase
+        .from('ti_categorias_productos')
+        .select('id, categoria')
+        .order('categoria', { ascending: true })
+      
+      if (data) setCategories(data)
+      if (error) console.error('Error fetching categories:', error)
+    }
+    fetchCategories()
+  }, [supabase])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -29,6 +46,34 @@ export default function AddProduct() {
     setLoading(true)
 
     try {
+      let finalCategoriaId = formData.categoria_id === 'otro' ? null : (formData.categoria_id ? Number(formData.categoria_id) : null)
+
+      // Manejar nueva categoría si se seleccionó "Otro"
+      if (formData.categoria_id === 'otro' && formData.nueva_categoria.trim()) {
+        const catName = formData.nueva_categoria.trim()
+        
+        // Verificar si ya existe para evitar duplicados
+        const { data: existingCat } = await supabase
+          .from('ti_categorias_productos')
+          .select('id')
+          .ilike('categoria', catName)
+          .maybeSingle()
+
+        if (existingCat) {
+          finalCategoriaId = existingCat.id
+        } else {
+          // Crear la nueva categoría
+          const { data: newCat, error: catError } = await supabase
+            .from('ti_categorias_productos')
+            .insert([{ categoria: catName }])
+            .select('id')
+            .single()
+
+          if (catError) throw catError
+          finalCategoriaId = newCat.id
+        }
+      }
+
       // 1. Insert product
       const { data: productData, error: productError } = await supabase
         .from('ti_productos')
@@ -38,6 +83,7 @@ export default function AddProduct() {
           nombre_dispositivo: formData.nombre_dispositivo,
           precio_producto: formData.precio_producto ? Number(formData.precio_producto) : null,
           detalle_producto: formData.detalle_producto || null,
+          categoria_id: finalCategoriaId,
         }])
         .select('id')
         .single()
@@ -139,6 +185,39 @@ export default function AddProduct() {
                   placeholder="0.00"
                   className="w-full rounded-xl border border-[#749094]/20 bg-[#749094]/5 px-4 py-3 text-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-[#749094]">Categoría *</label>
+                <select
+                  required
+                  name="categoria_id"
+                  value={formData.categoria_id}
+                  onChange={(e) => setFormData(prev => ({ ...prev, categoria_id: e.target.value }))}
+                  className="w-full rounded-xl border border-[#749094]/20 bg-[#749094]/5 px-4 py-3 text-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                >
+                  <option value="">Seleccionar categoría...</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.categoria}
+                    </option>
+                  ))}
+                  <option value="otro">+ Otra categoría...</option>
+                </select>
+
+                {formData.categoria_id === 'otro' && (
+                  <div className="mt-4 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="text-sm font-semibold text-[#749094]">Nombre de la nueva categoría *</label>
+                    <input 
+                      required
+                      name="nueva_categoria"
+                      value={formData.nueva_categoria}
+                      onChange={handleChange}
+                      type="text" 
+                      placeholder="Ej. Accesorios de Red"
+                      className="w-full rounded-xl border border-[#749094]/20 bg-[#749094]/5 px-4 py-3 text-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

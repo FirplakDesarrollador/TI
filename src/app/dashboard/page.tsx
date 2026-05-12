@@ -174,15 +174,15 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Header BI Style */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 px-8 py-4 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur-xl sm:px-8 sm:py-4">
         <div className="mx-auto flex max-w-[90rem] items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#254153] to-[#1a2e3b] text-white shadow-lg shadow-[#254153]/20">
+          <div className="flex items-center gap-3 pl-12 sm:gap-4 sm:pl-0">
+            <div className="hidden h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#254153] to-[#1a2e3b] text-white shadow-lg shadow-[#254153]/20 sm:flex">
               <TrendingUp size={24} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-[#254153] tracking-tighter uppercase">BI Analytics</h1>
-              <p className="text-[10px] font-bold text-[#749094] uppercase tracking-widest">Resumen Ejecutivo de Gestión TI</p>
+              <h1 className="text-lg font-black text-[#254153] tracking-tighter uppercase sm:text-2xl">BI Analytics</h1>
+              <p className="text-[8px] font-bold text-[#749094] uppercase tracking-widest sm:text-[10px]">Resumen Ejecutivo de Gestión TI</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
