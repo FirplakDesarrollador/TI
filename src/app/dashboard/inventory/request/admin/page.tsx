@@ -24,7 +24,8 @@ import {
   Eye,
   Lock,
   X,
-  Maximize2
+  Maximize2,
+  PackageCheck
 } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
@@ -52,7 +53,8 @@ export default function AdminRequestManagementPage() {
         'juan.bedoya@firplak.com',
         'analista2.desarrollo@firplak.com',
         'daniel.jimenez@firplak.com',
-        'alejandro.isaza@firplak.com'
+        'alejandro.isaza@firplak.com',
+        'milton.rendon@firplak.com'
       ]
 
       if (!user?.email || !authorizedEmails.includes(user.email)) {
@@ -114,6 +116,8 @@ export default function AdminRequestManagementPage() {
         return 'bg-emerald-100 text-emerald-700 border-emerald-200'
       case 'rechazado':
         return 'bg-rose-100 text-rose-700 border-rose-200'
+      case 'completado':
+        return 'bg-violet-100 text-violet-700 border-violet-200'
       default:
         return 'bg-slate-100 text-slate-700 border-slate-200'
     }
@@ -127,6 +131,8 @@ export default function AdminRequestManagementPage() {
         return <CheckCircle2 size={16} />
       case 'rechazado':
         return <XCircle size={16} />
+      case 'completado':
+        return <PackageCheck size={16} />
       default:
         return <Clock size={16} />
     }
@@ -189,7 +195,7 @@ export default function AdminRequestManagementPage() {
                 />
               </div>
               <div className="flex rounded-lg border border-slate-200 bg-white p-0.5">
-                {['todos', 'pendiente', 'aprobado', 'rechazado'].map((s) => (
+                {['todos', 'pendiente', 'aprobado', 'rechazado', 'completado'].map((s) => (
                   <button
                     key={s}
                     onClick={() => setFilterStatus(s)}
@@ -480,20 +486,23 @@ function RequestCard({ request, isUpdating, onUpdate, onOpenDetails }: { request
         {/* Right Column: Actions */}
         <div className="lg:col-span-3 flex flex-col justify-between">
           <div className="space-y-2">
-            <div className="grid grid-cols-3 gap-1">
-              {['Pendiente', 'Aprobado', 'Rechazado'].map((s) => (
+            <div className="grid grid-cols-2 gap-1">
+              {['Pendiente', 'Aprobado', 'Rechazado', 'Completado'].map((s) => (
                 <button
                   key={s}
                   onClick={() => setStatus(s)}
                   className={`flex flex-col items-center justify-center p-1 rounded-lg border-2 transition-all font-black text-[9px] uppercase tracking-tighter ${
                     status === s 
-                      ? 'border-[#254153] bg-[#254153]/5 text-[#254153]' 
+                      ? s === 'Completado'
+                        ? 'border-violet-600 bg-violet-50 text-violet-700'
+                        : 'border-[#254153] bg-[#254153]/5 text-[#254153]'
                       : 'border-transparent bg-slate-50 text-[#749094] hover:bg-slate-100'
                   }`}
                 >
                   {s === 'Pendiente' && <Clock size={12} />}
                   {s === 'Aprobado' && <CheckCircle2 size={12} />}
                   {s === 'Rechazado' && <XCircle size={12} />}
+                  {s === 'Completado' && <PackageCheck size={12} />}
                   {s}
                 </button>
               ))}
