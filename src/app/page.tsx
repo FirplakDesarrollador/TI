@@ -28,7 +28,8 @@ export default async function Home() {
     'juan.bedoya@firplak.com',
     'analista2.desarrollo@firplak.com',
     'daniel.jimenez@firplak.com',
-    'alejandro.isaza@firplak.com'
+    'alejandro.isaza@firplak.com',
+    'milton.rendon@firplak.com'
   ]
   const isDashboardAuthorized = user.email && authorizedEmails.includes(user.email)
 

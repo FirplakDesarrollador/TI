@@ -37,7 +37,8 @@ export function Sidebar() {
     'juan.bedoya@firplak.com',
     'analista2.desarrollo@firplak.com',
     'daniel.jimenez@firplak.com',
-    'alejandro.isaza@firplak.com'
+    'alejandro.isaza@firplak.com',
+    'milton.rendon@firplak.com'
   ]
 
   const isAuthorized = userEmail && authorizedEmails.includes(userEmail)

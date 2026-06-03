@@ -174,15 +174,15 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Header BI Style */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 px-8 py-4 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[90rem] items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#254153] to-[#1a2e3b] text-white shadow-lg shadow-[#254153]/20">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 px-2 py-2 backdrop-blur-xl sm:px-4 sm:py-3">
+        <div className="mx-auto flex w-full items-center justify-between px-2">
+          <div className="flex items-center gap-3 pl-12 sm:gap-4 sm:pl-0">
+            <div className="hidden h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#254153] to-[#1a2e3b] text-white shadow-lg shadow-[#254153]/20 sm:flex">
               <TrendingUp size={24} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-[#254153] tracking-tighter uppercase">BI Analytics</h1>
-              <p className="text-[10px] font-bold text-[#749094] uppercase tracking-widest">Resumen Ejecutivo de Gestión TI</p>
+              <h1 className="text-base font-black text-[#254153] tracking-tighter uppercase sm:text-xl">BI Analytics</h1>
+              <p className="text-[7px] font-bold text-[#749094] uppercase tracking-widest sm:text-[9px]">Resumen Ejecutivo de Gestión TI</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -196,10 +196,10 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[90rem] p-8 space-y-8">
+      <main className="mx-auto w-full p-4 space-y-4">
         
         {/* KPI Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <KPICard 
             title="Inventario Activo" 
             value={inventoryStats.reduce((a, b) => a + b.total, 0)} 
@@ -231,9 +231,9 @@ export default function Dashboard() {
         </div>
 
         {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* Main Trend Chart */}
-          <div className="lg:col-span-8 rounded-[2.5rem] bg-white p-8 border border-slate-200 shadow-xl shadow-slate-200/20">
+          <div className="lg:col-span-8 rounded-[1.5rem] bg-white p-4 border border-slate-200 shadow-xl shadow-slate-200/20">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h3 className="text-lg font-black text-[#254153] uppercase tracking-tight">Tendencia de Entregas</h3>
@@ -265,9 +265,9 @@ export default function Dashboard() {
           </div>
 
           {/* Secondary Charts Column */}
-          <div className="lg:col-span-4 grid grid-rows-2 gap-8">
+          <div className="lg:col-span-4 grid grid-rows-2 gap-4">
             {/* Distribution Pie Chart */}
-            <div className="rounded-[2.5rem] bg-white p-8 border border-slate-200 shadow-xl shadow-slate-200/20 flex flex-col relative overflow-hidden">
+            <div className="rounded-[1.5rem] bg-white p-4 border border-slate-200 shadow-xl shadow-slate-200/20 flex flex-col relative overflow-hidden">
               <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-indigo-50/50 blur-2xl" />
               <div className="mb-4 relative z-10">
                 <h3 className="text-lg font-black text-[#254153] uppercase tracking-tight">Estado del Stock</h3>
@@ -304,7 +304,7 @@ export default function Dashboard() {
             </div>
 
             {/* Requests Status Bar Chart */}
-            <div className="rounded-[2.5rem] bg-white p-8 border border-slate-200 shadow-xl shadow-slate-200/20 flex flex-col relative overflow-hidden">
+            <div className="rounded-[1.5rem] bg-white p-4 border border-slate-200 shadow-xl shadow-slate-200/20 flex flex-col relative overflow-hidden">
               <div className="absolute -left-10 -bottom-10 h-32 w-32 rounded-full bg-emerald-50/50 blur-2xl" />
               <div className="mb-4 relative z-10">
                 <h3 className="text-lg font-black text-[#254153] uppercase tracking-tight">Solicitudes</h3>
@@ -334,11 +334,11 @@ export default function Dashboard() {
         </div>
 
         {/* Detailed Table Section */}
-        <div className="rounded-[2.5rem] bg-white border border-slate-200 shadow-2xl shadow-[#254153]/5 overflow-hidden">
-          <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-white to-slate-50/50">
+        <div className="rounded-[1.5rem] bg-white border border-slate-200 shadow-2xl shadow-[#254153]/5 overflow-hidden">
+          <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-white to-slate-50/50">
              <div>
-                <h3 className="text-xl font-black text-[#254153] uppercase tracking-tight">Desglose Técnico de Inventario</h3>
-                <p className="text-xs text-[#749094] font-medium mt-1">Análisis detallado por categoría de dispositivo</p>
+                <h3 className="text-base font-black text-[#254153] uppercase tracking-tight leading-none">Desglose Técnico de Inventario</h3>
+                <p className="text-[10px] text-[#749094] font-medium mt-1">Análisis detallado por categoría</p>
              </div>
              <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94a3b8]" size={18} />
@@ -354,32 +354,32 @@ export default function Dashboard() {
           <div className="overflow-x-auto">
              <table className="w-full text-left border-collapse">
                 <thead>
-                   <tr className="bg-slate-50/80 text-[10px] font-black uppercase tracking-widest text-[#749094]">
-                      <th className="px-8 py-5 border-b border-slate-200">Dispositivo</th>
-                      {statuses.map(s => <th key={s} className="px-8 py-5 text-center border-b border-slate-200">{s}</th>)}
-                      <th className="px-8 py-5 text-right bg-[#254153]/5 text-[#254153] border-b border-slate-200">TOTAL</th>
+                   <tr className="bg-slate-50/80 text-[9px] font-black uppercase tracking-wider text-[#749094]">
+                      <th className="px-4 py-2 border-b border-slate-200">Dispositivo</th>
+                      {statuses.map(s => <th key={s} className="px-4 py-2 text-center border-b border-slate-200">{s}</th>)}
+                      <th className="px-4 py-2 text-right bg-[#254153]/5 text-[#254153] border-b border-slate-200">TOTAL</th>
                    </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                    {filteredStats.map(row => (
                      <tr key={row.device} className="hover:bg-slate-50/80 transition-colors group">
-                        <td className="px-8 py-5">
-                           <div className="flex items-center gap-4">
-                              <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-[#254153] group-hover:scale-110 group-hover:border-[#254153]/20 transition-all">
-                                 <Monitor size={18} />
+                        <td className="px-4 py-1.5">
+                           <div className="flex items-center gap-3">
+                              <div className="h-7 w-7 rounded bg-white border border-slate-100 shadow-sm flex items-center justify-center text-[#254153] transition-all">
+                                 <Monitor size={14} />
                               </div>
-                              <span className="font-bold text-[#254153] text-sm">{row.device}</span>
+                              <span className="font-bold text-[#254153] text-[12px]">{row.device}</span>
                            </div>
                         </td>
                         {statuses.map(s => (
-                          <td key={s} className="px-8 py-5 text-center">
-                             <span className={`px-3 py-1.5 rounded-lg text-xs font-black transition-colors ${row.counts[s] ? 'bg-slate-100 text-[#254153] shadow-inner' : 'text-slate-300'}`}>
+                          <td key={s} className="px-4 py-1.5 text-center">
+                             <span className={`px-2 py-0.5 rounded text-[11px] font-black transition-colors ${row.counts[s] ? 'bg-slate-100 text-[#254153]' : 'text-slate-300'}`}>
                                 {row.counts[s] || 0}
                              </span>
                           </td>
                         ))}
-                        <td className="px-8 py-5 text-right bg-[#254153]/[0.02]">
-                           <span className="text-lg font-black text-[#254153]">{row.total}</span>
+                        <td className="px-4 py-1.5 text-right bg-[#254153]/[0.02]">
+                           <span className="text-base font-black text-[#254153]">{row.total}</span>
                         </td>
                      </tr>
                    ))}
@@ -423,22 +423,22 @@ function KPICard({ title, value, icon, trend, color }: any) {
   const s = styles[color];
 
   return (
-    <div className="relative overflow-hidden rounded-[2.5rem] bg-white p-8 border border-slate-200 shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group">
-      <div className={`absolute -right-6 -top-6 h-32 w-32 rounded-full ${s.light} blur-3xl opacity-50 transition-opacity group-hover:opacity-100`} />
+    <div className="relative overflow-hidden rounded-[1.5rem] bg-white p-4 border border-slate-200 shadow-xl shadow-slate-200/20 hover:shadow-2xl transition-all duration-300 group">
+      <div className={`absolute -right-6 -top-6 h-24 w-24 rounded-full ${s.light} blur-3xl opacity-50 transition-opacity group-hover:opacity-100`} />
       
-      <div className="relative z-10 flex items-start justify-between mb-8">
-        <div className={`h-14 w-14 rounded-2xl ${s.bg} flex items-center justify-center text-white shadow-lg ${s.shadow} transform group-hover:scale-110 transition-transform duration-300`}>
+      <div className="relative z-10 flex items-start justify-between mb-4">
+        <div className={`h-10 w-10 rounded-xl ${s.bg} flex items-center justify-center text-white shadow-lg ${s.shadow} transform group-hover:scale-110 transition-transform duration-300`}>
           {icon}
         </div>
-        <div className={`text-[10px] font-black ${s.text} uppercase tracking-widest px-3 py-1.5 rounded-lg ${s.light}`}>
+        <div className={`text-[8px] font-black ${s.text} uppercase tracking-widest px-2 py-1 rounded ${s.light}`}>
           {trend}
         </div>
       </div>
       
-      <div className="relative z-10 space-y-2">
-        <p className="text-xs font-bold text-[#749094] uppercase tracking-tighter">{title}</p>
+      <div className="relative z-10 space-y-1">
+        <p className="text-[10px] font-bold text-[#749094] uppercase tracking-tighter">{title}</p>
         <div className="flex items-baseline gap-2">
-          <h4 className="text-4xl font-black text-[#254153]">{value}</h4>
+          <h4 className="text-2xl font-black text-[#254153]">{value}</h4>
         </div>
       </div>
     </div>

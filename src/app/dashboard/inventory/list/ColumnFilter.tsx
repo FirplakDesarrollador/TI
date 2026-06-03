@@ -48,35 +48,35 @@ export default function ColumnFilter({ title, paramKey, options }: ColumnFilterP
           e.preventDefault()
           setIsOpen(!isOpen)
         }}
-        className={`flex items-center gap-1.5 transition-colors hover:text-[#254153] ${
+        className={`flex items-center gap-1 transition-colors hover:text-[#254153] ${
           currentValue ? 'text-[#254153]' : 'text-[#749094]'
         }`}
       >
-        <span className="uppercase tracking-wider">{title}</span>
-        <ChevronDown size={12} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <span className="uppercase tracking-widest text-[8px] font-black">{title}</span>
+        <ChevronDown size={10} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         {currentValue && (
-          <div className="absolute -right-2 top-0 h-1.5 w-1.5 rounded-full bg-[#254153]" title="Filtro activo" />
+          <div className="absolute -right-1.5 top-0 h-1 w-1 rounded-full bg-[#254153]" title="Filtro activo" />
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-2 min-w-[160px] overflow-hidden rounded-xl border border-[#749094]/10 bg-white py-1 shadow-2xl animate-in fade-in zoom-in-95 duration-100 text-left">
+        <div className="absolute left-0 top-full z-50 mt-1 min-w-[140px] overflow-hidden rounded-lg border border-[#749094]/10 bg-white py-0.5 shadow-xl animate-in fade-in zoom-in-95 duration-100 text-left">
           {options.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setFilter(opt.value)}
-              className="flex w-full items-center justify-between px-4 py-2.5 text-left text-xs transition-colors hover:bg-[#749094]/5"
+              className="flex w-full items-center justify-between px-3 py-1.5 text-left text-[11px] transition-colors hover:bg-[#749094]/5"
             >
-              <span className={currentValue === opt.value ? 'font-bold text-[#254153]' : 'text-[#749094]'}>
+              <span className={currentValue === opt.value ? 'font-black text-[#254153]' : 'text-[#749094] font-medium'}>
                 {opt.label}
               </span>
-              {currentValue === opt.value && <Check size={14} className="text-[#254153]" strokeWidth={3} />}
+              {currentValue === opt.value && <Check size={12} className="text-[#254153]" strokeWidth={4} />}
             </button>
           ))}
           {currentValue && (
             <button
               onClick={() => setFilter('')}
-              className="mt-1 w-full border-t border-[#749094]/5 px-4 py-2 text-left text-[10px] font-bold text-[#254153] transition-colors hover:bg-[#749094]/5"
+              className="mt-0.5 w-full border-t border-[#749094]/5 px-3 py-1 text-left text-[9px] font-black uppercase text-[#254153] transition-colors hover:bg-[#749094]/5"
             >
               Limpiar filtro
             </button>
