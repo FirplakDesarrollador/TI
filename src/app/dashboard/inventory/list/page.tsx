@@ -10,13 +10,14 @@ import ColumnFilter from './ColumnFilter'
 export default async function InventoryList({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; priceRange?: string }>
+  searchParams: Promise<{ q?: string; status?: string; priceRange?: string; category?: string }>
 }) {
   // Resolver searchParams de forma segura y evitar el string "undefined"
   const params = await (searchParams || {})
   const q = params?.q || ''
   const searchTerm = q === 'undefined' ? '' : q
   const statusFilter = (params?.status === 'undefined' ? '' : params?.status) || ''
+  const categoryFilter = (params?.category === 'undefined' ? '' : params?.category) || ''
   const priceRangeFilter = (params?.priceRange === 'undefined' ? '' : params?.priceRange) || ''
 
   const supabase = await createServerSupabaseClient()
@@ -39,7 +40,7 @@ export default async function InventoryList({
   }
 
   // Procesar datos de forma segura
-  const products = (devices || []).map((p: any) => {
+  const allProducts = (devices || []).map((p: any) => {
     const history = p.ti_historial_stock || []
     // Tomar el último estado disponible
     const latestHistory = history.length > 0 
@@ -62,9 +63,18 @@ export default async function InventoryList({
     }
   })
   .sort((a: any, b: any) => (b.last_update_ts || 0) - (a.last_update_ts || 0))
-  .filter((p: any) => {
+
+  const uniqueCategories = Array.from(new Set(allProducts.map((p: any) => p.ti_categorias_productos?.categoria).filter(Boolean)))
+    .map(c => ({ label: String(c), value: String(c) }))
+
+  const uniqueStatuses = Array.from(new Set(allProducts.map((p: any) => p.latest_estado).filter(Boolean)))
+    .map(s => ({ label: String(s), value: String(s) }))
+
+  const products = allProducts.filter((p: any) => {
     // Filtros opcionales
     if (statusFilter && statusFilter !== '' && p.latest_estado !== statusFilter) return false
+    
+    if (categoryFilter && categoryFilter !== '' && p.ti_categorias_productos?.categoria !== categoryFilter) return false
     
     if (priceRangeFilter && priceRangeFilter !== '') {
       const price = Number(p.precio_producto) || 0
@@ -106,7 +116,7 @@ export default async function InventoryList({
           <div className="flex flex-1 items-center gap-3">
             <SearchInput />
             <div className="flex items-center gap-2">
-              {(statusFilter || priceRangeFilter || searchTerm) && (
+              {(statusFilter || categoryFilter || priceRangeFilter || searchTerm) && (
                 <Link
                   href="/dashboard/inventory/list"
                   className="flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-red-600 transition-all hover:bg-red-100"
@@ -126,9 +136,17 @@ export default async function InventoryList({
                 <tr className="border-b border-slate-100 bg-slate-50/50 text-[8px] font-black uppercase tracking-widest text-[#749094]">
                   <th className="px-2 py-1.5">Serial</th>
                   <th className="px-2 py-1.5">Equipo</th>
-                  <th className="px-2 py-1.5 text-center">Categoría</th>
+                  <th className="px-2 py-1.5 text-center">
+                    <div className="flex justify-center">
+                      <ColumnFilter title="Categoría" paramKey="category" options={uniqueCategories} />
+                    </div>
+                  </th>
                   <th className="px-2 py-1.5 text-center">Precio</th>
-                  <th className="px-2 py-1.5 text-center">Estado</th>
+                  <th className="px-2 py-1.5 text-center">
+                    <div className="flex justify-center">
+                      <ColumnFilter title="Estado" paramKey="status" options={uniqueStatuses} />
+                    </div>
+                  </th>
                   <th className="hidden px-2 py-1.5 xl:table-cell">Detalle</th>
                   <th className="px-2 py-1.5 text-right">Acciones</th>
                 </tr>
