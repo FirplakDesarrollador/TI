@@ -50,17 +50,22 @@ export const generateAssignmentPDF = async (data: AssignmentData) => {
   const margin = 25
   const pageWidth = doc.internal.pageSize.getWidth()
   
-  // Logic to detect if it's a computer/main device for title purposes:
-  const computerTerms = [
-    'computador', 'laptop', 'portatil', 'portátil', 'pc', 'desktop', 
-    'workstation', 'servidor', 'server', 'all in one', 'aio', 
-    'tablet', 'ipad', 'celular', 'teléfono', 'telefono', 
-    'smartphone', 'iphone', 'galaxy', 'unidad'
-  ]
-  const isComputador = computerTerms.some(term => 
-    (data.deviceName || '').toLowerCase().includes(term) || 
-    (data.deviceCategory || '').toLowerCase().includes(term)
-  )
+  // Map the device category to a display label for the PDF
+  const getCategoryLabel = (category: string): string => {
+    const cat = (category || '').toLowerCase().trim()
+    if (cat.includes('celular') || cat.includes('smartphone') || cat.includes('teléfono') || cat.includes('telefono') || cat.includes('iphone')) return 'Celular'
+    if (cat.includes('tablet') || cat.includes('ipad')) return 'Tablet'
+    if (cat.includes('laptop') || cat.includes('portátil') || cat.includes('portatil')) return 'Portátil'
+    if (cat.includes('desktop') || cat.includes('all in one') || cat.includes('aio') || cat.includes('pc')) return 'Computador'
+    if (cat.includes('computador') || cat.includes('workstation') || cat.includes('servidor') || cat.includes('server')) return 'Computador'
+    if (cat.includes('monitor')) return 'Monitor'
+    if (cat.includes('impresora') || cat.includes('printer')) return 'Impresora'
+    if (cat.includes('teclado') || cat.includes('mouse') || cat.includes('ratón')) return 'Periférico'
+    if (cat.includes('auricular') || cat.includes('headset') || cat.includes('audífono')) return 'Audífono'
+    // Fallback: use the raw category if available, else 'Computador'
+    return category ? category.charAt(0).toUpperCase() + category.slice(1).toLowerCase() : 'Computador'
+  }
+  const deviceLabel = getCategoryLabel(data.deviceCategory)
                        
   const fechaLarga = formatDateSpanish(data.assignmentDate)
   
@@ -87,13 +92,13 @@ export const generateAssignmentPDF = async (data: AssignmentData) => {
   // Título
   doc.setFontSize(13)
   doc.setFont('helvetica', 'bold')
-  const titulo = `ACTA DE ENTREGA EQUIPO ${isComputador ? 'COMPUTADOR' : 'PERIFÉRICO'}`
+  const titulo = `ACTA DE ENTREGA EQUIPO ${deviceLabel.toUpperCase()}`
   doc.text(titulo, pageWidth / 2, 50, { align: 'center' })
 
   // Intro
   doc.setFontSize(11)
   doc.setFont('helvetica', 'normal')
-  const intro = `A continuación, se relaciona la entrega de equipo ${isComputador ? 'Computador' : 'periférico'}.`
+  const intro = `A continuación, se relaciona la entrega de equipo ${deviceLabel}.`
   doc.text(intro, margin, 65)
 
   // Fields
@@ -169,7 +174,7 @@ export const generateAssignmentPDF = async (data: AssignmentData) => {
     doc.text('ESTA COPIA HACE PARTE INTEGRAL DEL PRESENTE CONTRATO', pageWidth / 2, 45, { align: 'center' })
     
     doc.setFontSize(13)
-    doc.text('AUTORIZACIÓN PARA DEDUCCIÓN POR EQUIPOS DE CÓMPUTO', pageWidth / 2, 55, { align: 'center' })
+    doc.text(`AUTORIZACIÓN PARA DEDUCCIÓN POR EQUIPOS DE ${deviceLabel.toUpperCase()}`, pageWidth / 2, 55, { align: 'center' })
     doc.text('DAÑADOS O PÉRDIDAS', pageWidth / 2, 62, { align: 'center' })
 
     doc.setFontSize(11)
@@ -203,17 +208,17 @@ export const generateAssignmentPDF = async (data: AssignmentData) => {
     doc.line(margin + textWidth, currentY + 1, margin + textWidth + cargoWidth + 4, currentY + 1)
     
     currentY += 6
-    const textFinal = 'en FIRPLAK S.A.; tiene asignado un Equipo de Cómputo como parte de su equipo de trabajo, el cual es necesario para el desempeño eficiente de sus labores.'
+    const textFinal = `en FIRPLAK S.A.; tiene asignado un Equipo de ${deviceLabel} como parte de su equipo de trabajo, el cual es necesario para el desempeño eficiente de sus labores.`
     const splitFinal = doc.splitTextToSize(textFinal, pageWidth - (margin * 2))
     doc.text(splitFinal, margin, currentY)
     
     currentY += (splitFinal.length * 6) + 5
 
     const sections = [
-      { t: 'RESPONSABILIDAD DEL TRABAJADOR:', c: 'El trabajador será responsable de la custodia, cuidado y mantenimiento adecuado a través del Área de TI, del Equipo de Cómputo asignado para el desempeño de sus funciones.' },
-      { t: 'REPORTE DE DAÑOS O PÉRDIDAS:', c: 'En caso de daño/avería o pérdida del Equipo de Cómputo asignado, el trabajador deberá informar de inmediato al Área de TI dentro de la empresa.' },
-      { t: 'PROCESO DE DEDUCCIÓN DE NÓMINA:', c: 'Previo agotamiento del respectivo Procedimiento Disciplinario; en caso de daño irreparable o pérdida del Equipo de Cómputo asignado debido a negligencia o incumplimiento de su deber de custodia, cuidado y responsabilidad con respecto al Equipo de Cómputo asignado, FIRPLAK S.A procederá con el colaborador que ejercía custodia del equipo perdido o averiado; a suscribir la presente autorización para ejecutar la respectiva deducción del costo del equipo dañado o perdido de la nómina del trabajador, de acuerdo con el valor indexado de reposición de este.' },
-      { t: 'ACUERDO DE CONSENTIMIENTO:', c: 'El trabajador reconoce y acepta que, en caso de incumplimiento de su deber de custodia, cuidado y responsabilidad con respecto al Equipo de Cómputo asignado, FIRPLAK S.A tiene el derecho de deducir el costo correspondiente de la Nómina y de la Liquidación Laboral del trabajador sin previa autorización adicional.' }
+      { t: 'RESPONSABILIDAD DEL TRABAJADOR:', c: `El trabajador será responsable de la custodia, cuidado y mantenimiento adecuado a través del Área de TI, del Equipo de ${deviceLabel} asignado para el desempeño de sus funciones.` },
+      { t: 'REPORTE DE DAÑOS O PÉRDIDAS:', c: `En caso de daño/avería o pérdida del Equipo de ${deviceLabel} asignado, el trabajador deberá informar de inmediato al Área de TI dentro de la empresa.` },
+      { t: 'PROCESO DE DEDUCCIÓN DE NÓMINA:', c: `Previo agotamiento del respectivo Procedimiento Disciplinario; en caso de daño irreparable o pérdida del Equipo de ${deviceLabel} asignado debido a negligencia o incumplimiento de su deber de custodia, cuidado y responsabilidad con respecto al Equipo de ${deviceLabel} asignado, FIRPLAK S.A procederá con el colaborador que ejercía custodia del equipo perdido o averiado; a suscribir la presente autorización para ejecutar la respectiva deducción del costo del equipo dañado o perdido de la nómina del trabajador, de acuerdo con el valor indexado de reposición de este.` },
+      { t: 'ACUERDO DE CONSENTIMIENTO:', c: `El trabajador reconoce y acepta que, en caso de incumplimiento de su deber de custodia, cuidado y responsabilidad con respecto al Equipo de ${deviceLabel} asignado, FIRPLAK S.A tiene el derecho de deducir el costo correspondiente de la Nómina y de la Liquidación Laboral del trabajador sin previa autorización adicional.` }
     ]
 
     sections.forEach(s => {
