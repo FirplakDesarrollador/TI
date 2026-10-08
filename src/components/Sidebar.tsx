@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { 
-  LayoutDashboard, 
   PlusCircle, 
   List, 
   UserCheck, 
@@ -14,6 +13,7 @@ import {
   X
 } from 'lucide-react'
 import { LogoFPK } from './LogoFPK'
+import { indicatorBoards } from '@/app/dashboard/indicators/registry'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
@@ -51,12 +51,9 @@ export function Sidebar() {
       href: '/',
       icon: Home,
     },
-    ...(isAuthorized ? [{
-      label: 'Dashboard',
-      href: '/dashboard',
-      icon: LayoutDashboard,
-    }] : []),
   ]
+
+  const indicatorItems = isAuthorized ? indicatorBoards : []
 
   const inventoryItems = isAuthorized ? [
     {
@@ -115,6 +112,28 @@ export function Sidebar() {
 
       <nav className="flex flex-col gap-1 p-4">
         {navItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={() => setIsOpen(false)}
+            className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+              isActive(item.href)
+                ? 'bg-[#254153] text-white shadow-md'
+                : 'text-[#749094] hover:bg-[#254153]/5 hover:text-[#254153]'
+            }`}
+          >
+            <item.icon size={20} />
+            {item.label}
+          </Link>
+        ))}
+
+        {indicatorItems.length > 0 && (
+          <div className="mt-6 mb-2 px-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#749094]/50">Indicadores</p>
+          </div>
+        )}
+
+        {indicatorItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
