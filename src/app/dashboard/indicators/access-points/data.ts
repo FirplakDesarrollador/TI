@@ -34,6 +34,7 @@ export interface ApSummary {
   availability: number | null // % en la ventana seleccionada
   avgLatency: number | null // ms, solo pings UP
   maxLatency: number | null
+  uptime30dMin: number
   downtime30dMin: number
   availability30d: number
   openIncident: boolean
@@ -176,6 +177,7 @@ export async function loadApData(supabase: SupabaseClient, window: WindowOption)
       availability: total ? (up / total) * 100 : null,
       avgLatency: latN ? latSum / latN : null,
       maxLatency: lat.length ? Math.max(...lat.map((p) => p.ping_ms!)) : null,
+      uptime30dMin: Math.max(periodMin - downtime, 0),
       downtime30dMin: downtime,
       availability30d: periodMin > 0 ? Math.max(0, 100 - (downtime / periodMin) * 100) : 100,
       openIncident: own.some((i) => !i.fecha_fin),
