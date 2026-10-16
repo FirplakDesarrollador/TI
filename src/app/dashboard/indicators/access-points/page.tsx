@@ -216,22 +216,25 @@ export default function AccessPointsIndicators() {
     };
   }, [data, selectedAp]);
 
-  const downtimeOption = useMemo<EChartOption | null>(() => {
+  const uptimeOption = useMemo<EChartOption | null>(() => {
     if (!data) return null;
-    const rows = [...data.summaries].sort((a, b) => a.downtime30dMin - b.downtime30dMin);
+    // Orden descendente: el eje de categorías dibuja el primero abajo, así el AP con menos servicio queda arriba
+    const rows = [...data.summaries].sort((a, b) => b.uptime30dMin - a.uptime30dMin);
     return {
-      grid: { left: 8, right: 96, top: 8, bottom: 8, containLabel: true },
+      grid: { left: 8, right: 96, top: 8, bottom: 28, containLabel: true },
       tooltip: {
         ...TOOLTIP_BASE,
         trigger: "item",
         formatter: (p: { dataIndex: number }) => {
           const r = rows[p.dataIndex];
-          return `<b>${r.monitor.nombre_monitor}</b><br/>Sin servicio: <b>${fmtDuration(r.downtime30dMin)}</b><br/>Disponibilidad: <b>${fmtPct(r.availability30d)}</b>`;
+          return `<b>${r.monitor.nombre_monitor}</b><br/>En servicio: <b>${fmtDuration(r.uptime30dMin)}</b><br/>Sin servicio: <b>${fmtDuration(r.downtime30dMin)}</b><br/>Disponibilidad: <b>${fmtPct(r.availability30d)}</b>`;
         },
       },
       xAxis: {
         type: "value",
         name: "horas",
+        nameLocation: "middle",
+        nameGap: 28,
         nameTextStyle: { color: C.axis, fontSize: 11 },
         axisLabel: { color: C.axis, fontSize: 11 },
         splitLine: { lineStyle: { color: C.grid } },
@@ -246,7 +249,7 @@ export default function AccessPointsIndicators() {
       series: [
         {
           type: "bar",
-          data: rows.map((r) => Math.round((r.downtime30dMin / 60) * 10) / 10),
+          data: rows.map((r) => Math.round((r.uptime30dMin / 60) * 10) / 10),
           barMaxWidth: 14,
           itemStyle: { color: C.brand, borderRadius: [0, 4, 4, 0] },
           label: {
@@ -384,17 +387,17 @@ export default function AccessPointsIndicators() {
           )}
         </div>
 
-        {/* Tiempo sin servicio 30 días */}
+        {/* Tiempo en servicio 30 días */}
         <div className="lg:col-span-5 rounded-[1.5rem] bg-white p-4 border border-slate-200 shadow-xl shadow-slate-200/20">
           <div className="mb-4">
-            <h3 className="text-lg font-black text-[#254153] uppercase tracking-tight">Tiempo sin servicio</h3>
-            <p className="text-xs text-[#749094] font-medium">Horas caído y disponibilidad · Últimos 30 días</p>
+            <h3 className="text-lg font-black text-[#254153] uppercase tracking-tight">Tiempo en servicio</h3>
+            <p className="text-xs text-[#749094] font-medium">Horas en línea y disponibilidad · Últimos 30 días</p>
           </div>
-          {downtimeOption && (
+          {uptimeOption && (
             <EChart
-              option={downtimeOption}
+              option={uptimeOption}
               className="w-full"
-              ariaLabel="Horas sin servicio por AP en los últimos 30 días"
+              ariaLabel="Horas en servicio por AP en los últimos 30 días"
               style={{ height: Math.max(320, data.aps.length * 22 + 24) }}
             />
           )}
