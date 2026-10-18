@@ -94,25 +94,25 @@ export default function DeviceHistoryModal({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#254153]/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl border border-[#749094]/10">
-        <div className="flex items-center justify-between border-b border-[#749094]/10 bg-[#749094]/5 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-[#749094]/10 bg-[#749094]/5 px-4 py-2">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#254153] text-white shadow-lg">
-              <History size={20} />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#254153] text-white shadow-lg">
+              <History size={16} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-[#254153]">Historial de Asignaciones</h2>
-              <p className="text-xs text-[#749094] font-medium">{deviceName}</p>
+              <h2 className="text-sm font-black text-[#254153] uppercase tracking-tight">Historial</h2>
+              <p className="text-[10px] text-[#749094] font-medium leading-none">{deviceName}</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="rounded-full p-2 text-[#749094] hover:bg-red-50 hover:text-red-500 transition-all"
+            className="rounded-full p-1 text-[#749094] hover:bg-red-50 hover:text-red-500 transition-all"
           >
-            <X size={20} />
+            <X size={16} />
           </button>
         </div>
 
-        <div className="max-h-[60vh] overflow-y-auto p-6">
+        <div className="max-h-[60vh] overflow-y-auto p-4">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#254153]/10 border-t-[#254153]"></div>
@@ -126,30 +126,30 @@ export default function DeviceHistoryModal({
               <p className="text-[#749094] font-medium">No hay registros de historial para este dispositivo.</p>
             </div>
           ) : (
-            <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-[#254153]/20 before:via-[#254153]/10 before:to-transparent">
+            <div className="relative space-y-4 before:absolute before:inset-0 before:ml-4 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-[#254153]/20 before:via-[#254153]/10 before:to-transparent">
               {history.map((entry) => (
-                <div key={entry.id} className="relative pl-12 group">
+                <div key={entry.id} className="relative pl-10 group">
                   {/* Dot */}
-                  <div className={`absolute left-0 mt-1.5 flex h-10 w-10 items-center justify-center rounded-full border-4 border-white shadow-sm transition-transform group-hover:scale-110 ${
+                  <div className={`absolute left-0 mt-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white shadow-sm transition-transform group-hover:scale-110 ${
                     entry.estado?.toLowerCase() === 'asignado'
                       ? 'bg-blue-500 text-white' 
                       : 'bg-emerald-500 text-white'
                   }`}>
-                    {entry.estado?.toLowerCase() === 'asignado' ? <User size={16} /> : <RotateCcw size={16} />}
+                    {entry.estado?.toLowerCase() === 'asignado' ? <User size={14} /> : <RotateCcw size={14} />}
                   </div>
 
-                  <div className="rounded-xl border border-[#749094]/10 bg-white p-4 shadow-sm transition-all hover:border-[#254153]/20 hover:shadow-md">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                  <div className="rounded-lg border border-[#749094]/10 bg-white p-3 shadow-sm transition-all hover:border-[#254153]/20 hover:shadow-md">
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
                         entry.estado?.toLowerCase() === 'asignado'
                           ? 'bg-blue-50 text-blue-600' 
                           : 'bg-emerald-50 text-emerald-600'
                       }`}>
-                        {entry.estado?.toLowerCase() === 'asignado' ? <CheckCircle2 size={10} /> : <RotateCcw size={10} />}
+                        {entry.estado?.toLowerCase() === 'asignado' ? <CheckCircle2 size={9} /> : <RotateCcw size={9} />}
                         {entry.estado}
                       </span>
-                      <div className="flex items-center gap-1.5 text-xs text-[#749094]">
-                        <Calendar size={12} />
+                      <div className="flex items-center gap-1 text-[10px] text-[#749094]">
+                        <Calendar size={10} />
                         {new Date(entry.created_at).toLocaleDateString('es-ES', {
                           day: '2-digit',
                           month: 'short',
@@ -160,14 +160,14 @@ export default function DeviceHistoryModal({
                       </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-bold text-[#254153]">
+                          <p className="text-[12px] font-bold text-[#254153]">
                             {entry.employee?.nombreCompleto || 'Sin empleado'}
                           </p>
                           {entry.Cargo && (
-                            <span className="text-[10px] text-[#749094] border-l border-[#749094]/30 pl-2">
+                            <span className="text-[9px] text-[#749094] border-l border-[#749094]/30 pl-2">
                               {entry.Cargo}
                             </span>
                           )}
@@ -178,10 +178,10 @@ export default function DeviceHistoryModal({
                             href={getPdfUrl(entry.pdf.pdf_url)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 transition-all hover:bg-rose-100 hover:scale-110 active:scale-95"
+                            className="flex h-6 w-6 items-center justify-center rounded-md bg-rose-50 text-rose-600 transition-all hover:bg-rose-100 hover:scale-110 active:scale-95"
                             title="Ver Acta Original"
                           >
-                            <FileText size={16} />
+                            <FileText size={14} />
                           </a>
                         )}
                       </div>
@@ -199,12 +199,12 @@ export default function DeviceHistoryModal({
           )}
         </div>
 
-        <div className="border-t border-[#749094]/10 bg-[#749094]/5 px-6 py-4">
+        <div className="border-t border-[#749094]/10 bg-[#749094]/5 p-3">
           <button
             onClick={onClose}
-            className="w-full rounded-xl bg-[#254153] py-2.5 text-sm font-bold text-white shadow-lg shadow-[#254153]/20 hover:bg-[#1a2e3b] transition-all active:scale-[0.98]"
+            className="w-full rounded-lg bg-[#254153] py-2 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-[#254153]/20 hover:bg-[#1a2e3b] transition-all active:scale-[0.98]"
           >
-            Cerrar Ventana
+            Cerrar
           </button>
         </div>
       </div>

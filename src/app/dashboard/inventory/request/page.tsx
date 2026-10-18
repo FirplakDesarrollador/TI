@@ -221,7 +221,7 @@ export default function RequestDevicePage() {
           >
             <ArrowLeft size={20} />
           </Link>
-          <h2 className="text-xl font-bold text-[#254153]">Solicitar Dispositivo</h2>
+          <h2 className="text-lg font-bold text-[#254153]">Solicitar Dispositivo</h2>
         </div>
 
         <button
@@ -231,7 +231,7 @@ export default function RequestDevicePage() {
             const btn = document.getElementById('copy-link-btn')
             if (btn) {
               const originalContent = btn.innerHTML
-              btn.innerHTML = '<span class="flex items-center gap-2 text-emerald-600"><CheckCircle2 size={18} /> ¡Copiado!</span>'
+              btn.innerHTML = '<span class="flex items-center gap-1 text-emerald-600"><CheckCircle2 size={14} /> ¡Copiado!</span>'
               btn.classList.add('bg-emerald-50', 'border-emerald-200')
               setTimeout(() => {
                 btn.innerHTML = originalContent
@@ -240,21 +240,21 @@ export default function RequestDevicePage() {
             }
           }}
           id="copy-link-btn"
-          className="flex items-center gap-2 rounded-xl border border-[#254153]/10 bg-[#254153]/5 px-4 py-2 text-xs font-bold text-[#254153] transition-all hover:bg-[#254153]/10 active:scale-95"
+          className="flex items-center gap-2 rounded-lg border border-[#254153]/10 bg-[#254153]/5 px-3 py-1.5 text-[10px] font-bold text-[#254153] transition-all hover:bg-[#254153]/10 active:scale-95"
         >
-          <PlusCircle size={16} />
+          <PlusCircle size={14} />
           Copiar Link Público
         </button>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 md:px-8 py-12">
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <main className="mx-auto max-w-4xl px-4 md:px-8 py-4">
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div>
-            <h1 className="text-3xl font-black text-[#254153] mb-2">Nueva Solicitud</h1>
-            <p className="text-[#749094]">Completa la información necesaria para procesar tu requerimiento de equipo.</p>
+            <h1 className="text-xl font-black text-[#254153] mb-1">Nueva Solicitud</h1>
+            <p className="text-[10px] text-[#749094]">Completa la información para procesar tu requerimiento.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-3">
             {error && (
               <div className="flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-sm font-medium text-red-600 border border-red-100">
                 <AlertCircle size={20} />
@@ -273,7 +273,7 @@ export default function RequestDevicePage() {
                   type="text"
                   disabled
                   value={user?.email || ''}
-                  className="w-full rounded-2xl border border-[#749094]/10 bg-[#749094]/5 px-4 py-3.5 text-sm text-[#749094] shadow-none outline-none cursor-not-allowed"
+                  className="w-full rounded-xl border border-[#749094]/10 bg-[#749094]/5 px-3 py-2 text-xs text-[#749094] shadow-none outline-none cursor-not-allowed"
                 />
               </div>
 
@@ -293,7 +293,7 @@ export default function RequestDevicePage() {
                     hour: '2-digit',
                     minute: '2-digit'
                   })}
-                  className="w-full rounded-2xl border border-[#749094]/10 bg-[#749094]/5 px-4 py-3.5 text-sm text-[#749094] shadow-none outline-none cursor-not-allowed"
+                  className="w-full rounded-xl border border-[#749094]/10 bg-[#749094]/5 px-3 py-2 text-xs text-[#749094] shadow-none outline-none cursor-not-allowed"
                 />
               </div>
 
@@ -307,7 +307,7 @@ export default function RequestDevicePage() {
                   required
                   value={formData.dispositivo}
                   onChange={(e) => setFormData({ ...formData, dispositivo: e.target.value })}
-                  className="w-full rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                  className="w-full rounded-xl border border-[#749094]/20 bg-white px-3 py-2 text-xs shadow-sm transition-all focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                 >
                   <option value="">Selecciona una categoría...</option>
                   {devices.map(device => (
@@ -328,7 +328,7 @@ export default function RequestDevicePage() {
                     required
                     value={formData.otro_dispositivo}
                     onChange={(e) => setFormData({ ...formData, otro_dispositivo: e.target.value })}
-                    className="w-full rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                    className="w-full rounded-xl border border-[#749094]/20 bg-white px-3 py-2 text-xs shadow-sm transition-all focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                     placeholder="Ej: Monitor UltraWide"
                   />
                 </div>
@@ -346,7 +346,7 @@ export default function RequestDevicePage() {
                   min="1"
                   value={formData.cantidad}
                   onChange={(e) => setFormData({ ...formData, cantidad: parseInt(e.target.value) || 1 })}
-                  className="w-full rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                  className="w-full rounded-xl border border-[#749094]/20 bg-white px-3 py-2 text-xs shadow-sm transition-all focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                   placeholder="Ej: 1"
                 />
                     {/* Centro de Costos */}
@@ -355,7 +355,7 @@ export default function RequestDevicePage() {
                 icon={<Building2 size={16} />}
                 placeholder="Busca el centro..."
                 required
-                className="w-full flex items-center justify-between rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                className="w-full flex items-center justify-between rounded-xl border border-[#749094]/20 bg-white px-3 py-2 text-xs shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                 options={costCenters}
                 value={formData.centro_costos}
                 onChange={(val) => setFormData({ ...formData, centro_costos: val.toString() })}
@@ -367,7 +367,7 @@ export default function RequestDevicePage() {
                 icon={<Hash size={16} />}
                 placeholder="Busca la cuenta..."
                 required
-                className="w-full flex items-center justify-between rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                className="w-full flex items-center justify-between rounded-xl border border-[#749094]/20 bg-white px-3 py-2 text-xs shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                 options={accounts}
                 value={formData.cuenta_contable}
                 onChange={(val) => setFormData({ ...formData, cuenta_contable: val.toString() })}
@@ -380,7 +380,7 @@ export default function RequestDevicePage() {
                 icon={<UserCheck size={16} />}
                 placeholder="Selecciona al jefe responsable..."
                 required
-                className="w-full flex items-center justify-between rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                className="w-full flex items-center justify-between rounded-xl border border-[#749094]/20 bg-white px-3 py-2 text-xs shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
                 options={jefes.map(jefe => ({
                   id: jefe.name,
                   label: jefe.email ? `${jefe.name} (${jefe.email})` : jefe.name
@@ -403,11 +403,11 @@ export default function RequestDevicePage() {
                   Comentario
                 </label>
                 <textarea
-                  rows={4}
+                  rows={3}
                   value={formData.comentario}
                   onChange={(e) => setFormData({ ...formData, comentario: e.target.value })}
-                  className="w-full rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
-                  placeholder="Justifica tu solicitud o añade detalles adicionales..."
+                  className="w-full rounded-xl border border-[#749094]/20 bg-white px-3 py-2 text-xs shadow-sm transition-all focus:border-[#254153]/30 focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                  placeholder="Justifica tu solicitud..."
                 />
               </div>
             </div>
@@ -416,7 +416,7 @@ export default function RequestDevicePage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-2xl bg-[#254153] py-4 text-sm font-bold text-white shadow-xl shadow-[#254153]/20 transition-all hover:scale-[1.02] hover:bg-[#1a2e3b] active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100"
+                className="w-full rounded-xl bg-[#254153] py-3 text-sm font-bold text-white shadow-lg shadow-[#254153]/10 transition-all hover:bg-[#1a2e3b] active:scale-[0.98] disabled:opacity-70"
               >
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">

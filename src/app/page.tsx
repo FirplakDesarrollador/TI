@@ -28,7 +28,8 @@ export default async function Home() {
     'juan.bedoya@firplak.com',
     'analista2.desarrollo@firplak.com',
     'daniel.jimenez@firplak.com',
-    'alejandro.isaza@firplak.com'
+    'alejandro.isaza@firplak.com',
+    'milton.rendon@firplak.com'
   ]
   const isDashboardAuthorized = user.email && authorizedEmails.includes(user.email)
 
@@ -94,10 +95,10 @@ export default async function Home() {
                         Administrar Solicitudes
                       </Link>
                       <Link
-                        href="/dashboard"
+                        href="/dashboard/indicators"
                         className="inline-flex w-full items-center justify-center rounded-xl bg-[#254153] px-6 py-4 text-sm font-bold text-white transition-all hover:scale-[1.02] hover:bg-[#1a2e3b] active:scale-[0.98] shadow-lg shadow-[#254153]/20"
                       >
-                        Ir al Dashboard Principal
+                        Ir a Indicadores
                       </Link>
                     </>
                   )}

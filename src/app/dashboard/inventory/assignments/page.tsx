@@ -270,48 +270,47 @@ export default function AssignmentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 font-sans text-[#254153]">
-      <div className="mx-auto max-w-7xl">
-        <header className="mb-10">
-          <div className="flex items-center gap-4 mb-6">
+    <div className="min-h-screen bg-[#F8FAFC] p-2 md:p-4 font-sans text-[#254153]">
+      <div className="mx-auto w-full px-2">
+        <header className="mb-3">
+          <div className="flex items-center gap-3 mb-3">
             <Link 
               href="/dashboard"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#749094] shadow-sm ring-1 ring-[#749094]/10 transition-all hover:text-[#254153] hover:shadow-md"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#749094] shadow-sm ring-1 ring-[#749094]/10 transition-all hover:text-[#254153]"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={18} />
             </Link>
             <div>
-              <h1 className="text-3xl font-black tracking-tight text-[#254153]">Gestión de Asignaciones</h1>
-              <p className="text-[#749094] font-medium">Control y seguimiento de dispositivos entregados a colaboradores</p>
+              <h1 className="text-xl font-black tracking-tight text-[#254153] leading-none">Gestión de Asignaciones</h1>
+              <p className="text-[10px] font-medium text-[#749094]">Control y seguimiento de dispositivos entregados</p>
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-[#749094]/10">
+          <div className="flex flex-col md:flex-row gap-2 items-center justify-between bg-white p-2 rounded-xl shadow-sm border border-[#749094]/10">
             <div className="relative w-full md:max-w-md">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#749094]" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#749094]" size={16} />
               <input 
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar por colaborador, equipo o serial..."
-                className="w-full rounded-xl border border-[#749094]/20 bg-[#F8FAFC] py-3 pl-12 pr-4 text-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                placeholder="Buscar colaborador, equipo o serial..."
+                className="w-full rounded-lg border border-[#749094]/20 bg-[#F8FAFC] py-2 pl-10 pr-3 text-[12px] transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none"
               />
             </div>
             
             <div className="flex items-center gap-2">
               <Link
                 href="/dashboard/inventory/sync-pdfs"
-                className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-700 transition-all hover:bg-amber-100"
-                title="Generar PDFs faltantes para firmas existentes"
+                className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-bold text-amber-700 transition-all hover:bg-amber-100"
               >
-                <FileText size={18} />
+                <FileText size={16} />
                 Sincronizar PDFs
               </Link>
               <Link
                 href="/dashboard/inventory/assign"
-                className="flex items-center gap-2 rounded-xl bg-[#254153] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#254153]/20 transition-all hover:bg-[#1a2e3b] active:scale-[0.98]"
+                className="flex items-center gap-2 rounded-lg bg-[#254153] px-4 py-2 text-[11px] font-bold text-white shadow-lg shadow-[#254153]/20 transition-all hover:bg-[#1a2e3b]"
               >
-                <UserPlus size={18} />
+                <UserPlus size={16} />
                 Nueva Asignación
               </Link>
             </div>
@@ -324,90 +323,90 @@ export default function AssignmentsPage() {
             <p className="text-sm font-bold text-[#749094] animate-pulse">Sincronizando asignaciones...</p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-3xl border border-[#749094]/10 bg-white shadow-xl shadow-[#749094]/5">
+          <div className="overflow-hidden rounded-xl border border-[#749094]/10 bg-white shadow-xl shadow-[#749094]/5">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-[#749094]/10 bg-[#749094]/5 text-[10px] font-black uppercase tracking-[0.1em] text-[#749094]">
-                    <th className="px-8 py-5">Colaborador / Área</th>
-                    <th className="px-6 py-5">Dispositivo</th>
-                    <th className="px-6 py-5">Serial / Ref</th>
-                    <th className="px-6 py-5">Fecha</th>
-                    <th className="px-6 py-5 text-center">Acta PDF</th>
-                    <th className="px-8 py-5 text-right">Acciones</th>
+                  <tr className="border-b border-[#749094]/10 bg-[#749094]/5 text-[9px] font-black uppercase tracking-wider text-[#749094]">
+                    <th className="px-3 py-2">Colaborador / Área</th>
+                    <th className="px-2 py-2">Dispositivo</th>
+                    <th className="px-2 py-2">Serial / Ref</th>
+                    <th className="px-2 py-2">Fecha</th>
+                    <th className="px-2 py-2 text-center">PDF</th>
+                    <th className="px-3 py-2 text-right">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#749094]/10 text-sm">
+                <tbody className="divide-y divide-[#749094]/10 text-[12px]">
                   {filteredAssignments.map((assignment, idx) => (
                     <tr key={idx} className="group transition-colors hover:bg-[#F8FAFC]">
-                      <td className="px-8 py-5">
+                      <td className="px-3 py-1.5">
                         <div className="flex flex-col">
-                          <span className="font-bold text-[#254153]">{assignment.employee_name}</span>
-                          <span className="text-[11px] font-medium text-[#749094] uppercase tracking-wider">{assignment.area} • {assignment.cargo}</span>
+                          <span className="font-bold text-[#254153] leading-none">{assignment.employee_name}</span>
+                          <span className="text-[9px] font-medium text-[#749094] uppercase tracking-tighter truncate max-w-[150px]">{assignment.area} • {assignment.cargo}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#254153]/5 text-[#254153]">
-                            <Package size={16} />
+                      <td className="px-2 py-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-[#254153]/5 text-[#254153]">
+                            <Package size={12} />
                           </div>
-                          <span className="font-semibold text-[#254153]">{assignment.device_name}</span>
+                          <span className="font-semibold text-[#254153] leading-none line-clamp-1">{assignment.device_name}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-5">
+                      <td className="px-2 py-1.5">
                         <div className="flex flex-col">
-                          <span className="font-mono text-xs font-bold text-[#254153]">{assignment.num_serial}</span>
-                          <span className="text-[11px] text-[#749094]">{assignment.referencia}</span>
+                          <span className="font-mono text-[9px] font-bold text-[#254153] leading-none">{assignment.num_serial}</span>
+                          <span className="text-[9px] text-[#749094] truncate max-w-[100px] leading-none mt-0.5">{assignment.referencia}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-5 text-[#749094] font-medium">
+                      <td className="px-2 py-1.5 text-[#749094] font-medium text-[11px] whitespace-nowrap">
                         {new Date(assignment.fecha_asignacion).toLocaleDateString('es-ES', {
                           day: '2-digit',
-                          month: 'short',
-                          year: 'numeric'
+                          month: '2-digit',
+                          year: '2-digit'
                         })}
                       </td>
-                      <td className="px-6 py-5 text-center">
+                      <td className="px-2 py-1.5 text-center">
                         {assignment.pdf_url ? (
                           <a 
                             href={getPdfUrl(assignment.pdf_url)} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-600 transition-all hover:bg-rose-100 hover:scale-110 active:scale-95 shadow-sm"
-                            title="Ver Acta de Entrega"
+                            className="inline-flex h-7 w-7 items-center justify-center rounded bg-rose-50 text-rose-600 transition-all hover:bg-rose-100 shadow-sm"
+                            title="Ver Acta"
                           >
-                            <FileText size={18} />
+                            <FileText size={14} />
                           </a>
                         ) : (
-                          <span className="text-[10px] font-bold text-[#749094]/40 italic">Sin Acta</span>
+                          <span className="text-[8px] font-bold text-[#749094]/40 italic">N/A</span>
                         )}
                       </td>
-                      <td className="px-8 py-5 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <td className="px-3 py-1.5 text-right">
+                        <div className="flex items-center justify-end gap-1 transition-opacity">
                           <button
                             onClick={() => setHistoryModal({
                               isOpen: true,
                               deviceId: assignment.device_id,
                               deviceName: assignment.device_name
                             })}
-                            className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#254153]/5 text-[#254153] transition-all hover:bg-[#254153]/10"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#254153]/5 text-[#254153] transition-all hover:bg-[#254153]/10"
                             title="Ver Historial"
                           >
-                            <History size={16} />
+                            <History size={12} />
                           </button>
                           <button
                             onClick={() => handleOpenEdit(assignment)}
-                            className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition-all hover:bg-blue-100"
-                            title="Editar Información"
+                            className="flex h-7 w-7 items-center justify-center rounded bg-blue-50 text-blue-600 transition-all hover:bg-blue-100"
+                            title="Editar"
                           >
-                            <Edit size={16} />
+                            <Edit size={12} />
                           </button>
                           <button
                             onClick={() => handleUnassign(assignment)}
-                            className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600 transition-all hover:bg-amber-100"
-                            title="Quitar Asignación"
+                            className="flex h-7 w-7 items-center justify-center rounded bg-amber-50 text-amber-600 transition-all hover:bg-amber-100"
+                            title="Desasignar"
                           >
-                            <UserMinus size={16} />
+                            <UserMinus size={12} />
                           </button>
                         </div>
                       </td>
@@ -433,24 +432,19 @@ export default function AssignmentsPage() {
 
       {/* Edit Modal */}
       {editModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#254153]/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-[#749094]/10 bg-[#F8FAFC] px-8 py-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#254153] rounded-lg text-white">
-                  <Edit size={20} />
-                </div>
-                <h3 className="text-lg font-bold text-[#254153]">Editar Asignación</h3>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-[#749094]/10 px-4 py-2 bg-[#749094]/5 rounded-t-2xl">
+              <h2 className="text-sm font-black text-[#254153] uppercase tracking-tight">Editar Asignación</h2>
               <button 
                 onClick={() => setEditModal({ isOpen: false, assignment: null })}
-                className="text-[#749094] hover:text-[#254153] transition-colors"
+                className="text-[#749094] hover:text-[#254153]"
               >
-                <X size={24} />
+                <X size={16} />
               </button>
             </div>
             
-            <form onSubmit={handleUpdateAssignment} className="p-8 space-y-6">
+            <form onSubmit={handleUpdateAssignment} className="p-4 space-y-3">
               <div className="rounded-2xl bg-[#254153]/5 p-4 flex items-center gap-4 border border-[#254153]/10">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm text-[#254153]">
                   <Package size={24} />
@@ -462,63 +456,60 @@ export default function AssignmentsPage() {
                 </div>
               </div>
 
-              <SearchableSelect
-                label="Cambiar Colaborador"
-                icon={<User size={16} />}
-                className="w-full flex items-center justify-between rounded-2xl border border-[#749094]/20 bg-white px-4 py-3.5 text-sm shadow-sm transition-all focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
-                placeholder="Buscar colaborador..."
-                options={employees.map(emp => ({
-                  id: emp.id,
-                  label: emp.nombreCompleto,
-                  sublabel: emp.cargo
-                }))}
-                value={editFormData.employee_id}
-                onChange={(val) => {
-                  const emp = employees.find(e => e.id === Number(val))
-                  setEditFormData(prev => ({ 
-                    ...prev, 
-                    employee_id: val.toString(),
-                    cargo: emp?.cargo || prev.cargo
-                  }))
-                }}
-              />
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-[#749094]">Cargo en el Acta</label>
-                <input 
-                  type="text" 
-                  value={editFormData.cargo}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, cargo: e.target.value }))}
-                  className="w-full rounded-xl border border-[#749094]/20 bg-[#F8FAFC] px-4 py-3 text-sm text-[#254153] placeholder:text-[#749094]/50 focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-[#749094] uppercase tracking-tighter">Persona Asignada</label>
+                <SearchableSelect
+                  options={employees.map(e => ({ id: e.id, label: e.nombreCompleto, sublabel: e.cargo }))}
+                  value={editFormData.employee_id}
+                  onChange={(val) => {
+                    const emp = employees.find(e => e.id === Number(val))
+                    setEditFormData(prev => ({ 
+                      ...prev, 
+                      employee_id: val.toString(),
+                      cargo: emp?.cargo || prev.cargo
+                    }))
+                  }}
+                  className="w-full rounded-lg border border-[#749094]/20 bg-[#F8FAFC] px-3 py-1.5 text-[12px] text-[#254153] focus:border-[#254153]/30 focus:bg-white focus:outline-none"
+                  placeholder="Seleccione colaborador..."
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-[#749094]">Notas de Actualización</label>
-                <textarea 
-                  rows={3}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-[#749094] uppercase tracking-tighter">Cargo</label>
+                <input
+                  type="text"
+                  value={editFormData.cargo}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, cargo: e.target.value }))}
+                  className="w-full rounded-lg border border-[#749094]/20 bg-[#F8FAFC] px-3 py-1.5 text-[12px] text-[#254153] focus:border-[#254153]/30 focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-[#749094] uppercase tracking-tighter">Observaciones</label>
+                <textarea
+                  rows={2}
                   value={editFormData.notas}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, notas: e.target.value }))}
-                  placeholder="Describa el motivo del cambio o actualización de información..."
-                  className="w-full rounded-xl border border-[#749094]/20 bg-[#F8FAFC] px-4 py-3 text-sm text-[#254153] placeholder:text-[#749094]/50 focus:border-[#254153]/30 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#254153]/5"
+                  placeholder="Motivo del cambio..."
+                  className="w-full rounded-lg border border-[#749094]/20 bg-[#F8FAFC] px-3 py-1.5 text-[12px] text-[#254153] placeholder:text-[#749094]/50 focus:border-[#254153]/30 focus:bg-white focus:outline-none"
                 ></textarea>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setEditModal({ isOpen: false, assignment: null })}
-                  className="flex-1 rounded-xl border border-[#749094]/20 px-6 py-4 text-sm font-bold text-[#749094] transition-all hover:bg-[#F8FAFC]"
+                  className="flex-1 rounded-lg border border-[#749094]/20 px-4 py-2 text-[11px] font-bold text-[#749094] transition-all hover:bg-[#F8FAFC]"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-[2] flex items-center justify-center gap-2 rounded-xl bg-[#254153] px-6 py-4 text-sm font-bold text-white shadow-lg shadow-[#254153]/20 transition-all hover:bg-[#1a2e3b] disabled:opacity-70"
+                  className="flex-[2] flex items-center justify-center gap-2 rounded-lg bg-[#254153] px-4 py-2 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-[#254153]/20 transition-all hover:bg-[#1a2e3b] disabled:opacity-70"
                 >
-                  {submitting ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
-                  Guardar Cambios
+                  {submitting ? <Loader2 className="animate-spin" size={14} /> : <CheckCircle2 size={14} />}
+                  Guardar
                 </button>
               </div>
             </form>
