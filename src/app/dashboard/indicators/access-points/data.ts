@@ -106,8 +106,14 @@ export async function loadApData(supabase: SupabaseClient, window: WindowOption)
     .sort((a, b) => a.nombre_monitor.localeCompare(b.nombre_monitor, 'es'))
   const ids = aps.map((m) => m.id)
 
-  const [pings, incidentsRes] = await Promise.all([
-    fetchPings(supabase, ids, since),
+  // Buckets de tiempo alineados al tamaño de intervalo
+  const bucketMs = window.bucketMin * 60e3
+  const firstBucket = Math.floor(since.getTime() / bucketMs) * bucketMs
+
+  // Se consulta desde el inicio del primer intervalo (no a mitad) y con margen hacia atrás,
+  // para que el primer intervalo tenga su ping y un ping previo que lo cubra
+  const [fetched, incidentsRes] = await Promise.all([
+    fetchPings(supabase, ids, new Date(firstBucket - PING_GRACE_MS)),
     supabase
       .from('fact_caidas_incidentes')
       .select('id, monitor_id, fecha_inicio, fecha_fin, duracion_minutos')
@@ -118,9 +124,7 @@ export async function loadApData(supabase: SupabaseClient, window: WindowOption)
   if (incidentsRes.error) throw incidentsRes.error
   const incidents = (incidentsRes.data ?? []) as Incident[]
 
-  // Buckets de tiempo alineados al tamaño de intervalo
-  const bucketMs = window.bucketMin * 60e3
-  const firstBucket = Math.floor(since.getTime() / bucketMs) * bucketMs
+  const pings = fetched.filter((p) => new Date(p.fecha_hora).getTime() >= firstBucket)
   const bucketCount = Math.ceil((now.getTime() - firstBucket) / bucketMs)
   const buckets = Array.from({ length: bucketCount }, (_, i) => new Date(firstBucket + i * bucketMs))
   const bucketIndex = (t: number) => Math.min(Math.floor((t - firstBucket) / bucketMs), bucketCount - 1)
@@ -130,6 +134,29 @@ export async function loadApData(supabase: SupabaseClient, window: WindowOption)
   const grid = new Map<number, Cell[]>(ids.map((id) => [id, buckets.map(newCell)]))
   const overall = buckets.map(newCell)
   const last = new Map<number, Ping>()
+
+  // Pings justo antes de la ventana: no cuentan, solo sirven para cubrir el primer intervalo
+  const seeds = new Map<number, Cell>(ids.map((id) => [id, newCell()]))
+  const overallSeed = newCell()
+  const record = (cell: Cell, t: number, p: Ping) => {
+    const isUp = p.estado_codigo === 1
+    cell.total++
+    if (t > cell.lastT) {
+      cell.lastT = t
+      cell.lastUp = isUp
+    }
+    if (isUp && p.ping_ms != null) {
+      cell.latSum += p.ping_ms
+      cell.latN++
+    }
+  }
+  for (const p of fetched) {
+    const t = new Date(p.fecha_hora).getTime()
+    if (t >= firstBucket) continue
+    const seed = seeds.get(p.monitor_id)
+    if (seed) record(seed, t, p)
+    record(overallSeed, t, p)
+  }
 
   for (const p of pings) {
     const t = new Date(p.fecha_hora).getTime()
@@ -142,6 +169,10 @@ export async function loadApData(supabase: SupabaseClient, window: WindowOption)
     if (t > cell.lastT) {
       cell.lastT = t
       cell.lastUp = isUp
+    }
+    if (t > all.lastT) {
+      all.lastT = t
+      all.lastUp = isUp
     }
     if (isUp) {
       cell.up++
@@ -157,25 +188,29 @@ export async function loadApData(supabase: SupabaseClient, window: WindowOption)
     if (!prev || prev.fecha_hora < p.fecha_hora) last.set(p.monitor_id, p)
   }
 
-  // Celda que "cubre" un intervalo vacío: la anterior, si su último ping cae dentro de la tolerancia
-  const coveringCell = (cells: Cell[], b: number) => {
-    const prev = cells[b - 1]
-    const bucketEnd = firstBucket + (b + 1) * bucketMs
-    return prev && prev.total && bucketEnd - prev.lastT <= PING_GRACE_MS ? prev : null
+  // Para cada intervalo, la celda con datos que lo representa: la suya, o la última celda con
+  // pings si ese último ping cae dentro de la tolerancia (medida hasta "ahora" en el intervalo en curso)
+  const resolveCells = (cells: Cell[], seed: Cell) => {
+    let carry: Cell | null = seed.total ? seed : null
+    return cells.map((c, b) => {
+      if (c.total) {
+        carry = c
+        return c
+      }
+      const ref = Math.min(firstBucket + (b + 1) * bucketMs, now.getTime())
+      return carry && ref - carry.lastT <= PING_GRACE_MS ? carry : null
+    })
   }
 
-  const availabilitySeries = (cells: Cell[]) =>
-    cells.map((c, b) => {
-      if (c.total) return Math.round((c.up / c.total) * 1000) / 10
-      const cover = coveringCell(cells, b)
-      return cover ? (cover.lastUp ? 100 : 0) : null
+  const availabilitySeries = (cells: Cell[], seed: Cell) =>
+    resolveCells(cells, seed).map((src, b) => {
+      if (!src) return null
+      if (src === cells[b]) return Math.round((src.up / src.total) * 1000) / 10
+      return src.lastUp ? 100 : 0
     })
 
-  const latencySeries = (cells: Cell[]) =>
-    cells.map((c, b) => {
-      const src = c.total ? c : coveringCell(cells, b)
-      return src?.latN ? src.latSum / src.latN : null
-    })
+  const latencySeries = (cells: Cell[], seed: Cell) =>
+    resolveCells(cells, seed).map((src) => (src?.latN ? src.latSum / src.latN : null))
 
   const summaries: ApSummary[] = aps.map((m) => {
     const cells = grid.get(m.id)!
@@ -219,10 +254,10 @@ export async function loadApData(supabase: SupabaseClient, window: WindowOption)
     incidents,
     // [bucketIdx, apIdx, disponibilidad %] — null si no hubo pings en ese intervalo ni uno anterior que lo cubra
     heatmap: aps.flatMap((m, apIdx) =>
-      availabilitySeries(grid.get(m.id)!).map((v, b) => [b, apIdx, v] as const),
+      availabilitySeries(grid.get(m.id)!, seeds.get(m.id)!).map((v, b) => [b, apIdx, v] as const),
     ),
-    latencyByAp: new Map(aps.map((m) => [m.id, latencySeries(grid.get(m.id)!)])),
-    latencyOverall: latencySeries(overall),
+    latencyByAp: new Map(aps.map((m) => [m.id, latencySeries(grid.get(m.id)!, seeds.get(m.id)!)])),
+    latencyOverall: latencySeries(overall, overallSeed),
     bucketMin: window.bucketMin,
     pingCount: pings.length,
     loadedAt: now,
