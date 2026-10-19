@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   AlertTriangle,
+  CalendarRange,
   Clock,
   Gauge,
   RefreshCw,
@@ -15,7 +16,14 @@ import { createClient } from "@/lib/supabase";
 import { KPICard } from "../_components/KPICard";
 import { IndicatorsLoading } from "../_components/IndicatorsLoading";
 import { EChart, type EChartOption } from "../_components/EChart";
-import { WINDOWS, loadApData, type ApData, type ApStatus } from "./data";
+import {
+  MAX_RANGE_DAYS,
+  PRESETS,
+  loadApData,
+  type ApData,
+  type ApStatus,
+  type DateRange,
+} from "./data";
 
 const REFRESH_MS = 60_000;
 
@@ -81,20 +89,40 @@ function fmtDuration(min: number) {
   return `${(min / 1440).toFixed(1)} d`;
 }
 
+// Valor para <input type="datetime-local"> en hora local
+function toInputValue(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+const fmtBucketSize = (min: number) => (min >= 60 ? `${min / 60} h` : `${min} min`);
+
+// En rangos de más de un día el eje necesita la fecha además de la hora
+const bucketFmt = (range: DateRange) =>
+  range.to.getTime() - range.from.getTime() > 24 * 3600e3 ? dateTimeFmt : timeFmt;
+
 export default function AccessPointsIndicators() {
-  const [windowKey, setWindowKey] = useState(WINDOWS[2].key);
+  const [presetKey, setPresetKey] = useState<string>("24h");
+  const [customRange, setCustomRange] = useState<DateRange | null>(null);
+  const [draftFrom, setDraftFrom] = useState(() => toInputValue(new Date(Date.now() - 24 * 3600e3)));
+  const [draftTo, setDraftTo] = useState(() => toInputValue(new Date()));
+  const [rangeError, setRangeError] = useState<string | null>(null);
   const [selectedAp, setSelectedAp] = useState<number | "all">("all");
   const [data, setData] = useState<ApData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const windowOpt = WINDOWS.find((w) => w.key === windowKey)!;
+  const preset = PRESETS.find((p) => p.key === presetKey);
+  const isLive = presetKey !== "custom";
 
   const load = useCallback(async () => {
+    const now = Date.now();
+    const range = preset ? { from: new Date(now - preset.hours * 3600e3), to: new Date(now) } : customRange;
+    if (!range) return;
     setRefreshing(true);
     try {
-      setData(await loadApData(createClient(), windowOpt));
+      setData(await loadApData(createClient(), range));
       setError(null);
     } catch (err) {
       console.error("Error fetching AP indicators:", err);
@@ -103,13 +131,37 @@ export default function AccessPointsIndicators() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [windowOpt]);
+  }, [preset, customRange]);
 
+  // Los rangos relativos se refrescan solos; un rango personalizado es fijo
   useEffect(() => {
     load();
+    if (!isLive) return;
     const timer = setInterval(load, REFRESH_MS);
     return () => clearInterval(timer);
-  }, [load]);
+  }, [load, isLive]);
+
+  const applyCustomRange = () => {
+    const from = new Date(draftFrom);
+    const to = new Date(Math.min(new Date(draftTo).getTime(), Date.now()));
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
+      setRangeError("Selecciona fecha y hora de inicio y fin.");
+    } else if (from >= to) {
+      setRangeError("La fecha inicial debe ser anterior a la final.");
+    } else if (to.getTime() - from.getTime() > MAX_RANGE_DAYS * 86400e3) {
+      setRangeError(`El rango máximo es de ${MAX_RANGE_DAYS} días.`);
+    } else {
+      setRangeError(null);
+      setCustomRange({ from, to });
+      setPresetKey("custom");
+    }
+  };
+
+  const periodLabel = !data
+    ? ""
+    : isLive && preset
+      ? `Últimas ${preset.label}`
+      : `${dateTimeFmt.format(data.range.from)} – ${dateTimeFmt.format(data.range.to)}`;
 
   const kpis = useMemo(() => {
     if (!data) return null;
@@ -129,7 +181,7 @@ export default function AccessPointsIndicators() {
 
   const statusBarsOption = useMemo<EChartOption | null>(() => {
     if (!data) return null;
-    const labels = data.buckets.map((b) => timeFmt.format(b));
+    const labels = data.buckets.map((b) => bucketFmt(data.range).format(b));
     const names = data.aps.map((m) => m.nombre_monitor);
     const dotColor: Record<ApStatus, string> = { up: C.good, down: C.critical, stale: C.axis };
 
@@ -157,7 +209,7 @@ export default function AccessPointsIndicators() {
           const start = data.buckets[b];
           const end = new Date(start.getTime() + data.bucketMin * 60e3);
           const st = bucketStatus(v);
-          return `<b>${names[ap]}</b><br/>${timeFmt.format(start)} – ${timeFmt.format(end)}<br/><span style="color:${st.color}">●</span> ${st.label}${st === BUCKET_LEGEND[3] ? "" : ` · <b>${fmtPct(v)}</b>`}`;
+          return `<b>${names[ap]}</b><br/>${bucketFmt(data.range).format(start)} – ${bucketFmt(data.range).format(end)}<br/><span style="color:${st.color}">●</span> ${st.label}${st === BUCKET_LEGEND[3] ? "" : ` · <b>${fmtPct(v)}</b>`}`;
         },
       },
       xAxis: {
@@ -225,7 +277,7 @@ export default function AccessPointsIndicators() {
       xAxis: {
         type: "category",
         boundaryGap: false,
-        data: data.buckets.map((b) => timeFmt.format(b)),
+        data: data.buckets.map((b) => bucketFmt(data.range).format(b)),
         axisLine: { lineStyle: { color: C.grid } },
         axisTick: { show: false },
         axisLabel: { color: C.axis, fontSize: 11 },
@@ -257,7 +309,7 @@ export default function AccessPointsIndicators() {
   const uptimeOption = useMemo<EChartOption | null>(() => {
     if (!data) return null;
     // Orden descendente: el eje de categorías dibuja el primero abajo, así el AP con menos servicio queda arriba
-    const rows = [...data.summaries].sort((a, b) => b.uptime30dMin - a.uptime30dMin);
+    const rows = [...data.summaries].sort((a, b) => b.uptimeMin - a.uptimeMin);
     return {
       grid: { left: 8, right: 96, top: 8, bottom: 28, containLabel: true },
       tooltip: {
@@ -265,7 +317,7 @@ export default function AccessPointsIndicators() {
         trigger: "item",
         formatter: (p: { dataIndex: number }) => {
           const r = rows[p.dataIndex];
-          return `<b>${r.monitor.nombre_monitor}</b><br/>En servicio: <b>${fmtDuration(r.uptime30dMin)}</b><br/>Sin servicio: <b>${fmtDuration(r.downtime30dMin)}</b><br/>Disponibilidad: <b>${fmtPct(r.availability30d)}</b>`;
+          return `<b>${r.monitor.nombre_monitor}</b><br/>En servicio: <b>${fmtDuration(r.uptimeMin)}</b><br/>Sin servicio: <b>${fmtDuration(r.downtimeMin)}</b><br/>Disponibilidad: <b>${fmtPct(r.incidentAvailability)}</b>`;
         },
       },
       xAxis: {
@@ -287,7 +339,7 @@ export default function AccessPointsIndicators() {
       series: [
         {
           type: "bar",
-          data: rows.map((r) => Math.round((r.uptime30dMin / 60) * 10) / 10),
+          data: rows.map((r) => Math.round((r.uptimeMin / 60) * 10) / 10),
           barMaxWidth: 14,
           itemStyle: { color: C.brand, borderRadius: [0, 4, 4, 0] },
           label: {
@@ -295,7 +347,7 @@ export default function AccessPointsIndicators() {
             position: "right",
             color: C.muted,
             fontSize: 11,
-            formatter: (p: { dataIndex: number }) => fmtPct(rows[p.dataIndex].availability30d),
+            formatter: (p: { dataIndex: number }) => fmtPct(rows[p.dataIndex].incidentAvailability),
           },
         },
       ],
@@ -319,19 +371,61 @@ export default function AccessPointsIndicators() {
   return (
     <main className="mx-auto w-full p-4 space-y-4">
       {/* Filtros */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
-          {WINDOWS.map((w) => (
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+          <div className="flex w-fit items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+            {PRESETS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => {
+                  setPresetKey(p.key);
+                  setRangeError(null);
+                }}
+                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                  p.key === presetKey ? "bg-[#254153] text-white shadow" : "text-[#749094] hover:bg-slate-50"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <div
+            className={`flex flex-wrap items-center gap-2 rounded-xl border bg-white p-1 pl-3 shadow-sm ${
+              isLive ? "border-slate-200" : "border-[#254153]/40 ring-4 ring-[#254153]/5"
+            }`}
+          >
+            <CalendarRange size={14} className="text-[#749094]" />
+            <label className="flex items-center gap-1.5 text-[11px] font-bold text-[#749094]">
+              Desde
+              <input
+                type="datetime-local"
+                value={draftFrom}
+                max={draftTo}
+                onChange={(e) => setDraftFrom(e.target.value)}
+                className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-[#254153] focus:outline-none focus:ring-2 focus:ring-[#254153]/10"
+              />
+            </label>
+            <label className="flex items-center gap-1.5 text-[11px] font-bold text-[#749094]">
+              Hasta
+              <input
+                type="datetime-local"
+                value={draftTo}
+                min={draftFrom}
+                max={toInputValue(new Date())}
+                onChange={(e) => setDraftTo(e.target.value)}
+                className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-[#254153] focus:outline-none focus:ring-2 focus:ring-[#254153]/10"
+              />
+            </label>
             <button
-              key={w.key}
-              onClick={() => setWindowKey(w.key)}
+              onClick={applyCustomRange}
               className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
-                w.key === windowKey ? "bg-[#254153] text-white shadow" : "text-[#749094] hover:bg-slate-50"
+                isLive ? "bg-slate-100 text-[#254153] hover:bg-slate-200" : "bg-[#254153] text-white shadow"
               }`}
             >
-              Últimas {w.label}
+              Aplicar
             </button>
-          ))}
+          </div>
+          {rangeError && <span className="text-[11px] font-bold text-rose-600">{rangeError}</span>}
         </div>
         <div className="flex items-center gap-3 text-[11px] text-[#749094]">
           {error && <span className="font-bold text-rose-600">{error}</span>}
@@ -355,28 +449,28 @@ export default function AccessPointsIndicators() {
           title="AP's en línea"
           value={`${kpis.up} / ${kpis.total}`}
           icon={<Wifi size={24} />}
-          trend="Estado actual"
+          trend={isLive ? "Estado actual" : "Al final del período"}
           color="emerald"
         />
         <KPICard
           title="Disponibilidad promedio"
           value={fmtPct(kpis.availability)}
           icon={<Activity size={24} />}
-          trend={`Últimas ${windowOpt.label}`}
+          trend={isLive ? periodLabel : "Período seleccionado"}
           color="indigo"
         />
         <KPICard
           title="Latencia promedio"
           value={fmtMs(kpis.latency)}
           icon={<Gauge size={24} />}
-          trend={`Últimas ${windowOpt.label}`}
+          trend={isLive ? periodLabel : "Período seleccionado"}
           color="amber"
         />
         <KPICard
           title="Incidentes abiertos"
           value={kpis.openIncidents}
           icon={<AlertTriangle size={24} />}
-          trend="Caídas en curso"
+          trend={isLive ? "Caídas en curso" : "Al final del período"}
           color="rose"
         />
       </div>
@@ -387,7 +481,7 @@ export default function AccessPointsIndicators() {
           <div>
             <h3 className="text-lg font-black text-[#254153] uppercase tracking-tight">Disponibilidad por AP</h3>
             <p className="text-xs text-[#749094] font-medium">
-              % de pings exitosos en intervalos de {windowOpt.bucketMin} min · Últimas {windowOpt.label}
+              % de pings exitosos en intervalos de {fmtBucketSize(data.bucketMin)} · {periodLabel}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-semibold text-[#749094]">
@@ -435,17 +529,17 @@ export default function AccessPointsIndicators() {
           )}
         </div>
 
-        {/* Tiempo en servicio 30 días */}
+        {/* Tiempo en servicio del período */}
         <div className="lg:col-span-5 rounded-[1.5rem] bg-white p-4 border border-slate-200 shadow-xl shadow-slate-200/20">
           <div className="mb-4">
             <h3 className="text-lg font-black text-[#254153] uppercase tracking-tight">Tiempo en servicio</h3>
-            <p className="text-xs text-[#749094] font-medium">Horas en línea y disponibilidad · Últimos 30 días</p>
+            <p className="text-xs text-[#749094] font-medium">Horas en línea según caídas registradas · {periodLabel}</p>
           </div>
           {uptimeOption && (
             <EChart
               option={uptimeOption}
               className="w-full"
-              ariaLabel="Horas en servicio por AP en los últimos 30 días"
+              ariaLabel="Horas en servicio por AP en el período seleccionado"
               style={{ height: Math.max(320, data.aps.length * 22 + 24) }}
             />
           )}
@@ -466,10 +560,10 @@ export default function AccessPointsIndicators() {
                 <th className="px-4 py-2 border-b border-slate-200">IP</th>
                 <th className="px-4 py-2 border-b border-slate-200">Estado</th>
                 <th className="px-4 py-2 border-b border-slate-200">Última señal</th>
-                <th className="px-4 py-2 text-right border-b border-slate-200">Disp. {windowOpt.label}</th>
+                <th className="px-4 py-2 text-right border-b border-slate-200">Disponibilidad</th>
                 <th className="px-4 py-2 text-right border-b border-slate-200">Latencia prom.</th>
                 <th className="px-4 py-2 text-right border-b border-slate-200">Latencia máx.</th>
-                <th className="px-4 py-2 text-right bg-[#254153]/5 text-[#254153] border-b border-slate-200">Disp. 30 d</th>
+                <th className="px-4 py-2 text-right bg-[#254153]/5 text-[#254153] border-b border-slate-200">Tiempo caído</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -492,7 +586,7 @@ export default function AccessPointsIndicators() {
                     <td className="px-4 py-1.5 text-right text-[12px] text-[#254153]">{fmtMs(s.avgLatency)}</td>
                     <td className="px-4 py-1.5 text-right text-[12px] text-[#254153]">{fmtMs(s.maxLatency)}</td>
                     <td className="px-4 py-1.5 text-right bg-[#254153]/[0.02] text-[13px] font-black text-[#254153]">
-                      {fmtPct(s.availability30d)}
+                      {fmtDuration(s.downtimeMin)}
                     </td>
                   </tr>
                 );
@@ -506,7 +600,7 @@ export default function AccessPointsIndicators() {
       <div className="rounded-[1.5rem] bg-white border border-slate-200 shadow-2xl shadow-[#254153]/5 overflow-hidden">
         <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-white to-slate-50/50">
           <h3 className="text-base font-black text-[#254153] uppercase tracking-tight leading-none">Caídas registradas</h3>
-          <p className="text-[10px] text-[#749094] font-medium mt-1">Incidentes de los últimos 30 días y caídas en curso</p>
+          <p className="text-[10px] text-[#749094] font-medium mt-1">Incidentes que se cruzan con el período · {periodLabel}</p>
         </div>
         {data.incidents.length === 0 ? (
           <p className="p-6 text-center text-sm text-[#749094]">Sin caídas registradas en el período.</p>
