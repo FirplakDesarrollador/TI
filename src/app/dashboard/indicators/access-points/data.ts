@@ -31,27 +31,45 @@ export interface ApSummary {
   monitor: Monitor
   status: ApStatus
   lastSeen: Date | null
-  availability: number | null // % en la ventana seleccionada
+  availability: number | null // % de pings exitosos en el período
   avgLatency: number | null // ms, solo pings UP
   maxLatency: number | null
-  uptime30dMin: number
-  downtime30dMin: number
-  availability30d: number
-  openIncident: boolean
+  uptimeMin: number // según incidentes registrados
+  downtimeMin: number
+  incidentAvailability: number
+  openIncident: boolean // caída en curso al final del período
 }
 
-export interface WindowOption {
+export interface DateRange {
+  from: Date
+  to: Date
+}
+
+export interface RangePreset {
   key: string
   label: string
   hours: number
-  bucketMin: number
 }
 
-export const WINDOWS: WindowOption[] = [
-  { key: '1h', label: '1 h', hours: 1, bucketMin: 1 },
-  { key: '6h', label: '6 h', hours: 6, bucketMin: 5 },
-  { key: '24h', label: '24 h', hours: 24, bucketMin: 15 },
+export const PRESETS: RangePreset[] = [
+  { key: '1h', label: '1 h', hours: 1 },
+  { key: '6h', label: '6 h', hours: 6 },
+  { key: '24h', label: '24 h', hours: 24 },
+  { key: '7d', label: '7 días', hours: 168 },
 ]
+
+// Los pings se agregan en el navegador (~27 mil filas por día), así que el rango se limita
+export const MAX_RANGE_DAYS = 7
+
+// Tamaño de intervalo según la duración del rango, para mantener ~60–100 barras
+export function bucketMinutesFor(range: DateRange) {
+  const hours = (range.to.getTime() - range.from.getTime()) / 3600e3
+  if (hours <= 1) return 1
+  if (hours <= 6) return 5
+  if (hours <= 24) return 15
+  if (hours <= 72) return 60
+  return 120
+}
 
 const PAGE_SIZE = 10000 // max-rows configurado en Supabase
 const STALE_AFTER_MIN = 5 // sin pings en este tiempo => "Sin datos"
@@ -59,7 +77,6 @@ const STALE_AFTER_MIN = 5 // sin pings en este tiempo => "Sin datos"
 // así que un intervalo puede quedar vacío aunque no se haya perdido nada. Si el último ping
 // del intervalo anterior cubre el intervalo vacío dentro de esta tolerancia, se hereda su estado.
 const PING_GRACE_MS = 2 * 60e3
-const SLA_DAYS = 30
 
 const PRIVATE_IPV4 = /^(10\.\d{1,3}|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d{1,3}\.\d{1,3}$/
 
@@ -69,13 +86,14 @@ export function isAccessPoint(m: Monitor) {
   return PRIVATE_IPV4.test(m.target_ip_url ?? '') && !/test|prueba/i.test(m.nombre_monitor)
 }
 
-async function fetchPings(supabase: SupabaseClient, ids: number[], since: Date) {
+async function fetchPings(supabase: SupabaseClient, ids: number[], since: Date, until: Date) {
   const base = () =>
     supabase
       .from('fact_pings_continuos')
       .select('monitor_id, fecha_hora, ping_ms, estado_codigo', { count: 'exact' })
       .in('monitor_id', ids)
       .gte('fecha_hora', since.toISOString())
+      .lte('fecha_hora', until.toISOString())
       .order('id')
 
   const first = await base().range(0, PAGE_SIZE - 1)
@@ -93,10 +111,11 @@ async function fetchPings(supabase: SupabaseClient, ids: number[], since: Date) 
   return [first, ...rest].flatMap((r) => (r.data ?? []) as Ping[])
 }
 
-export async function loadApData(supabase: SupabaseClient, window: WindowOption) {
-  const now = new Date()
-  const since = new Date(now.getTime() - window.hours * 3600e3)
-  const slaSince = new Date(now.getTime() - SLA_DAYS * 86400e3)
+export async function loadApData(supabase: SupabaseClient, range: DateRange) {
+  // Fin efectivo del período: nunca en el futuro
+  const now = new Date(Math.min(range.to.getTime(), Date.now()))
+  const since = range.from
+  const bucketMin = bucketMinutesFor(range)
 
   const { data: monitorRows, error: mErr } = await supabase.from('dim_monitores').select('*')
   if (mErr) throw mErr
@@ -107,18 +126,20 @@ export async function loadApData(supabase: SupabaseClient, window: WindowOption)
   const ids = aps.map((m) => m.id)
 
   // Buckets de tiempo alineados al tamaño de intervalo
-  const bucketMs = window.bucketMin * 60e3
+  const bucketMs = bucketMin * 60e3
   const firstBucket = Math.floor(since.getTime() / bucketMs) * bucketMs
 
   // Se consulta desde el inicio del primer intervalo (no a mitad) y con margen hacia atrás,
   // para que el primer intervalo tenga su ping y un ping previo que lo cubra
   const [fetched, incidentsRes] = await Promise.all([
-    fetchPings(supabase, ids, new Date(firstBucket - PING_GRACE_MS)),
+    fetchPings(supabase, ids, new Date(firstBucket - PING_GRACE_MS), now),
+    // Incidentes que se cruzan con el período
     supabase
       .from('fact_caidas_incidentes')
       .select('id, monitor_id, fecha_inicio, fecha_fin, duracion_minutos')
       .in('monitor_id', ids)
-      .or(`fecha_fin.is.null,fecha_fin.gte.${slaSince.toISOString()}`)
+      .lte('fecha_inicio', now.toISOString())
+      .or(`fecha_fin.is.null,fecha_fin.gte.${since.toISOString()}`)
       .order('fecha_inicio', { ascending: false }),
   ])
   if (incidentsRes.error) throw incidentsRes.error
@@ -223,13 +244,13 @@ export async function loadApData(supabase: SupabaseClient, window: WindowOption)
     const lastSeen = lastPing ? new Date(lastPing.fecha_hora) : null
     const stale = !lastSeen || now.getTime() - lastSeen.getTime() > STALE_AFTER_MIN * 60e3
 
-    // Disponibilidad 30 días a partir de incidentes, recortando al alta del monitor
-    const periodStart = Math.max(slaSince.getTime(), new Date(m.created_at).getTime())
-    const periodMin = (now.getTime() - periodStart) / 60e3
+    // Tiempo en servicio del período a partir de incidentes, recortando al alta del monitor
+    const periodStart = Math.max(since.getTime(), new Date(m.created_at).getTime())
+    const periodMin = Math.max((now.getTime() - periodStart) / 60e3, 0)
     const own = incidents.filter((i) => i.monitor_id === m.id)
     const downtime = own.reduce((acc, i) => {
       const start = Math.max(new Date(i.fecha_inicio).getTime(), periodStart)
-      const end = i.fecha_fin ? new Date(i.fecha_fin).getTime() : now.getTime()
+      const end = Math.min(i.fecha_fin ? new Date(i.fecha_fin).getTime() : now.getTime(), now.getTime())
       return acc + Math.max(end - start, 0) / 60e3
     }, 0)
 
@@ -240,10 +261,10 @@ export async function loadApData(supabase: SupabaseClient, window: WindowOption)
       availability: total ? (up / total) * 100 : null,
       avgLatency: latN ? latSum / latN : null,
       maxLatency: lat.length ? Math.max(...lat.map((p) => p.ping_ms!)) : null,
-      uptime30dMin: Math.max(periodMin - downtime, 0),
-      downtime30dMin: downtime,
-      availability30d: periodMin > 0 ? Math.max(0, 100 - (downtime / periodMin) * 100) : 100,
-      openIncident: own.some((i) => !i.fecha_fin),
+      uptimeMin: Math.max(periodMin - downtime, 0),
+      downtimeMin: downtime,
+      incidentAvailability: periodMin > 0 ? Math.max(0, 100 - (downtime / periodMin) * 100) : 100,
+      openIncident: own.some((i) => !i.fecha_fin || new Date(i.fecha_fin) > now),
     }
   })
 
@@ -258,9 +279,10 @@ export async function loadApData(supabase: SupabaseClient, window: WindowOption)
     ),
     latencyByAp: new Map(aps.map((m) => [m.id, latencySeries(grid.get(m.id)!, seeds.get(m.id)!)])),
     latencyOverall: latencySeries(overall, overallSeed),
-    bucketMin: window.bucketMin,
+    bucketMin,
+    range: { from: since, to: now },
     pingCount: pings.length,
-    loadedAt: now,
+    loadedAt: new Date(),
   }
 }
 
