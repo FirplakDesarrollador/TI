@@ -10,6 +10,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
+import type { CustomSeriesRenderItem } from "echarts";
 import { createClient } from "@/lib/supabase";
 import { KPICard } from "../_components/KPICard";
 import { IndicatorsLoading } from "../_components/IndicatorsLoading";
@@ -56,7 +57,22 @@ const dateTimeFmt = new Intl.DateTimeFormat("es-CO", {
   hour12: false,
 });
 
-const fmtPct = (v: number | null) => (v == null ? "—" : `${v.toFixed(v === 100 ? 0 : 1)}%`);
+const BUCKET_LEGEND = [
+  { label: "Disponible (100%)", color: C.good },
+  { label: "Intermitente (50–99%)", color: C.warning },
+  { label: "Caído (<50%)", color: C.critical },
+  { label: "Sin datos", color: C.empty },
+];
+
+// Clasifica un intervalo según su % de pings exitosos (null/NaN = no hubo pings)
+function bucketStatus(v: number | null) {
+  if (v == null || Number.isNaN(v)) return BUCKET_LEGEND[3];
+  if (v >= 100) return BUCKET_LEGEND[0];
+  if (v >= 50) return BUCKET_LEGEND[1];
+  return BUCKET_LEGEND[2];
+}
+
+const fmtPct = (v: number | null) => (v == null || Number.isNaN(v) ? "—" : `${v.toFixed(v === 100 ? 0 : 1)}%`);
 const fmtMs = (v: number | null) => (v == null ? "—" : `${v.toFixed(1)} ms`);
 
 function fmtDuration(min: number) {
@@ -111,19 +127,37 @@ export default function AccessPointsIndicators() {
     };
   }, [data]);
 
-  const heatmapOption = useMemo<EChartOption | null>(() => {
+  const statusBarsOption = useMemo<EChartOption | null>(() => {
     if (!data) return null;
     const labels = data.buckets.map((b) => timeFmt.format(b));
     const names = data.aps.map((m) => m.nombre_monitor);
+    const dotColor: Record<ApStatus, string> = { up: C.good, down: C.critical, stale: C.axis };
+
+    const renderItem: CustomSeriesRenderItem = (_params, api) => {
+      const [x, y] = api.coord([api.value(0), api.value(1)]);
+      const [bandW, bandH] = api.size!([1, 1]) as number[];
+      const gap = bandW > 6 ? 2 : 1;
+      const width = Math.max(bandW - gap, 1);
+      const height = Math.min(bandH * 0.62, 22);
+      const v = api.value(2) as number;
+      return {
+        type: "rect",
+        shape: { x: x - width / 2, y: y - height / 2, width, height, r: Math.min(3, width / 2) },
+        style: { fill: bucketStatus(Number.isNaN(v) ? null : v).color },
+        emphasis: { style: { opacity: 0.75 } },
+      };
+    };
+
     return {
-      grid: { left: 8, right: 16, top: 8, bottom: 56, containLabel: true },
+      grid: { left: 8, right: 8, top: 4, bottom: 4, containLabel: true },
       tooltip: {
         ...TOOLTIP_BASE,
         formatter: (p: { value: [number, number, number | null] }) => {
           const [b, ap, v] = p.value;
           const start = data.buckets[b];
           const end = new Date(start.getTime() + data.bucketMin * 60e3);
-          return `<b>${names[ap]}</b><br/>${timeFmt.format(start)} – ${timeFmt.format(end)}<br/>Disponibilidad: <b>${fmtPct(v)}</b>`;
+          const st = bucketStatus(v);
+          return `<b>${names[ap]}</b><br/>${timeFmt.format(start)} – ${timeFmt.format(end)}<br/><span style="color:${st.color}">●</span> ${st.label}${st === BUCKET_LEGEND[3] ? "" : ` · <b>${fmtPct(v)}</b>`}`;
         },
       },
       xAxis: {
@@ -131,39 +165,43 @@ export default function AccessPointsIndicators() {
         data: labels,
         axisLine: { show: false },
         axisTick: { show: false },
-        axisLabel: { color: C.axis, fontSize: 10, interval: Math.ceil(labels.length / 12) - 1 },
-        splitArea: { show: false },
+        axisLabel: { color: C.axis, fontSize: 10, interval: Math.ceil(labels.length / 8) - 1 },
       },
-      yAxis: {
-        type: "category",
-        data: names,
-        inverse: true,
-        axisLine: { show: false },
-        axisTick: { show: false },
-        axisLabel: { color: C.ink, fontSize: 11, fontWeight: 600 },
-      },
-      visualMap: {
-        type: "piecewise",
-        orient: "horizontal",
-        left: "center",
-        bottom: 0,
-        itemWidth: 12,
-        itemHeight: 12,
-        textStyle: { color: C.muted, fontSize: 11 },
-        pieces: [
-          { min: 100, max: 100, label: "Disponible (100%)", color: C.good },
-          { min: 50, lt: 100, label: "Intermitente (50–99%)", color: C.warning },
-          { min: 0, lt: 50, label: "Caído (<50%)", color: C.critical },
-        ],
-        outOfRange: { color: C.empty },
-      },
+      yAxis: [
+        {
+          type: "category",
+          data: names,
+          inverse: true,
+          axisLine: { show: false },
+          axisTick: { show: false },
+          axisLabel: {
+            formatter: (name: string, i: number) => `{${data.summaries[i].status}|●} {name|${name}}`,
+            rich: {
+              ...Object.fromEntries(
+                Object.entries(dotColor).map(([k, color]) => [k, { color, fontSize: 10, padding: [0, 4, 0, 0] }]),
+              ),
+              name: { color: C.ink, fontSize: 11, fontWeight: 600 },
+            },
+          },
+        },
+        {
+          // Etiquetas de disponibilidad de la ventana a la derecha de cada fila
+          type: "category",
+          data: data.summaries.map((s) => fmtPct(s.availability)),
+          inverse: true,
+          position: "right",
+          axisLine: { show: false },
+          axisTick: { show: false },
+          axisLabel: { color: C.muted, fontSize: 11, fontWeight: 700 },
+        },
+      ],
       series: [
         {
-          type: "heatmap",
-          data: data.heatmap.map(([b, ap, v]) => [b, ap, v ?? "-"]),
-          itemStyle: { borderColor: "#ffffff", borderWidth: 1, borderRadius: 2 },
-          emphasis: { itemStyle: { borderColor: C.ink, borderWidth: 1 } },
-          progressive: 0,
+          type: "custom",
+          renderItem,
+          data: data.heatmap.map(([b, ap, v]) => [b, ap, v ?? NaN]),
+          encode: { x: 0, y: 1 },
+          clip: true,
         },
       ],
     };
@@ -343,20 +381,30 @@ export default function AccessPointsIndicators() {
         />
       </div>
 
-      {/* Mapa de disponibilidad */}
+      {/* Barras de estado por AP */}
       <div className="rounded-[1.5rem] bg-white p-4 border border-slate-200 shadow-xl shadow-slate-200/20">
-        <div className="mb-4">
-          <h3 className="text-lg font-black text-[#254153] uppercase tracking-tight">Disponibilidad por AP</h3>
-          <p className="text-xs text-[#749094] font-medium">
-            % de pings exitosos en intervalos de {windowOpt.bucketMin} min · Últimas {windowOpt.label}
-          </p>
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h3 className="text-lg font-black text-[#254153] uppercase tracking-tight">Disponibilidad por AP</h3>
+            <p className="text-xs text-[#749094] font-medium">
+              % de pings exitosos en intervalos de {windowOpt.bucketMin} min · Últimas {windowOpt.label}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-semibold text-[#749094]">
+            {BUCKET_LEGEND.map((l) => (
+              <span key={l.label} className="flex items-center gap-1.5">
+                <span className="h-3 w-1.5 rounded-full" style={{ backgroundColor: l.color }} />
+                {l.label}
+              </span>
+            ))}
+          </div>
         </div>
-        {heatmapOption && (
+        {statusBarsOption && (
           <EChart
-            option={heatmapOption}
+            option={statusBarsOption}
             className="w-full"
-            ariaLabel="Mapa de calor de disponibilidad por AP"
-            style={{ height: Math.max(240, data.aps.length * 24 + 80) }}
+            ariaLabel="Barras de estado de disponibilidad por AP"
+            style={{ height: data.aps.length * 30 + 32 }}
           />
         )}
       </div>
